@@ -20,6 +20,9 @@ public class Collector extends User {
     @OneToMany(mappedBy = "collector")
     private List<CollectionRequest> assignedRequests;
     
-    private String collectorLicense;
+    private String companyName;
+    private String companyAddress;
+    private String licenseNumber;
+    private Boolean isVerified = false;
     private Boolean isAvailable = true;
 }
