@@ -1,8 +1,8 @@
 package com.recyclehub.backend.security;
 
-import com.recyclehub.backend.repositories.AdminRepository;
-import com.recyclehub.backend.repositories.CollectorRepository;
-import com.recyclehub.backend.repositories.HouseHoldRepository;
+import com.recyclehub.backend.components.admin.repository.AdminRepository;
+import com.recyclehub.backend.components.collector.repository.CollectorRepository;
+import com.recyclehub.backend.components.houseHold.repository.HouseHoldRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
