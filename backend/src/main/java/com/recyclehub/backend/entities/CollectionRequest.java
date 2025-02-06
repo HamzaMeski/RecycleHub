@@ -42,7 +42,6 @@ public class CollectionRequest {
     private String country;
     private String zipCode;
     
-    private LocalDateTime desiredDateTime;
     private String notes;
     
     @Enumerated(EnumType.STRING)

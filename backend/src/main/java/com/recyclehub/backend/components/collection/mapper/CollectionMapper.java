@@ -21,7 +21,6 @@ public interface CollectionMapper {
     @Mapping(target = "weightInGrams", expression = "java(convertKgToGrams(request.getEstimatedWeight()))")
     @Mapping(target = "collectionAddress", source = "street")
     @Mapping(target = "city", source = "city")
-    @Mapping(target = "collectionDateTime", source = "desiredDateTime")
     @Mapping(target = "notes", source = "notes")
     @Mapping(target = "status", source = "status")
     @Mapping(target = "actualWeightInGrams", expression = "java(convertKgToGrams(request.getActualWeight()))")

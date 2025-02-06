@@ -29,10 +29,6 @@ public class CollectionRequestDTO {
     @NotBlank(message = "City is required")
     private String city;
 
-    @NotNull(message = "Collection date and time is required")
-    @Future(message = "Collection date and time must be in the future")
-    private LocalDateTime collectionDateTime;
-
     private String notes;
 
     private RequestStatus status;

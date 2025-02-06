@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,13 +42,10 @@ public class CollectionServiceImpl implements CollectionService {
             throw new ValidationException("Maximum number of pending requests (3) reached");
         }
 
-        validateCollectionTime(requestDTO.getCollectionDateTime());
-
         CollectionRequest request = CollectionRequest.builder()
                 .individual(household)
                 .street(requestDTO.getCollectionAddress())
                 .city(requestDTO.getCity())
-                .desiredDateTime(requestDTO.getCollectionDateTime())
                 .notes(requestDTO.getNotes())
                 .status(RequestStatus.PENDING)
                 .estimatedWeight(requestDTO.getWeightInGrams() / 1000.0) // Convert to kg
@@ -98,11 +94,8 @@ public class CollectionServiceImpl implements CollectionService {
             throw new ValidationException("Only pending requests can be updated");
         }
 
-        validateCollectionTime(requestDTO.getCollectionDateTime());
-
         request.setStreet(requestDTO.getCollectionAddress());
         request.setCity(requestDTO.getCity());
-        request.setDesiredDateTime(requestDTO.getCollectionDateTime());
         request.setNotes(requestDTO.getNotes());
         request.setEstimatedWeight(requestDTO.getWeightInGrams() / 1000.0);
 
@@ -273,13 +266,6 @@ public class CollectionServiceImpl implements CollectionService {
                 List.of(RequestStatus.PENDING, RequestStatus.OCCUPIED, RequestStatus.IN_PROGRESS)
         );
         return pendingRequests < 3;
-    }
-
-    private void validateCollectionTime(LocalDateTime collectionDateTime) {
-        LocalTime time = collectionDateTime.toLocalTime();
-        if (time.isBefore(LocalTime.of(9, 0)) || time.isAfter(LocalTime.of(18, 0))) {
-            throw new ValidationException("Collection time must be between 09:00 and 18:00");
-        }
     }
 
     private void validateStatusTransition(RequestStatus currentStatus, RequestStatus newStatus) {
