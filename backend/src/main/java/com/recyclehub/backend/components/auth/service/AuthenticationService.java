@@ -11,12 +11,14 @@ import com.recyclehub.backend.entities.HouseHold;
 import com.recyclehub.backend.exception.AuthenticationException;
 import com.recyclehub.backend.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
@@ -26,6 +28,8 @@ public class AuthenticationService {
     private final HouseHoldRepository houseHoldRepository;
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
+        log.info("Attempting authentication for email: {}", request.getEmail());
+        
         // Try to authenticate
         try {
             authenticationManager.authenticate(
@@ -34,18 +38,32 @@ public class AuthenticationService {
                     request.getPassword()
                 )
             );
+            log.info("Authentication successful for email: {}", request.getEmail());
         } catch (Exception e) {
+            log.error("Authentication failed for email: {}", request.getEmail(), e);
             throw new AuthenticationException("Invalid email or password");
         }
 
         // Find user in appropriate repository
         return adminRepository.findByEmail(request.getEmail())
-                .map(admin -> buildAuthResponse(admin, "ADMIN"))
+                .map(admin -> {
+                    log.info("Building auth response for admin: {}", admin.getEmail());
+                    return buildAuthResponse(admin, "ADMIN");
+                })
                 .orElseGet(() -> collectorRepository.findByEmail(request.getEmail())
-                        .map(collector -> buildAuthResponse(collector, "COLLECTOR"))
+                        .map(collector -> {
+                            log.info("Building auth response for collector: {}", collector.getEmail());
+                            return buildAuthResponse(collector, "COLLECTOR");
+                        })
                         .orElseGet(() -> houseHoldRepository.findByEmail(request.getEmail())
-                                .map(household -> buildAuthResponse(household, "INDIVIDUAL"))
-                                .orElseThrow(() -> new AuthenticationException("User not found"))
+                                .map(household -> {
+                                    log.info("Building auth response for household: {}", household.getEmail());
+                                    return buildAuthResponse(household, "INDIVIDUAL");
+                                })
+                                .orElseThrow(() -> {
+                                    log.error("No user found with email: {}", request.getEmail());
+                                    return new AuthenticationException("User not found");
+                                })
                         ));
     }
 
