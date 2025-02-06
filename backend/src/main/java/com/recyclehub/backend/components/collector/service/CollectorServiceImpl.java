@@ -5,6 +5,7 @@ import com.recyclehub.backend.components.collector.dto.CollectorResponse;
 import com.recyclehub.backend.components.collector.mapper.CollectorMapper;
 import com.recyclehub.backend.components.collector.repository.CollectorRepository;
 import com.recyclehub.backend.entities.Collector;
+import com.recyclehub.backend.exception.DuplicateResourceException;
 import com.recyclehub.backend.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,8 +39,8 @@ public class CollectorServiceImpl implements CollectorService {
         log.info("Creating new collector with email: {}", request.getEmail());
         
         if (collectorRepository.findByEmail(request.getEmail()).isPresent()) {
-            log.error("Email already taken: {}", request.getEmail());
-            throw new IllegalStateException("Email already taken");
+            log.error("Email already exists: {}", request.getEmail());
+            throw new DuplicateResourceException("Email already exists");
         }
 
         Collector collector = Collector.builder()

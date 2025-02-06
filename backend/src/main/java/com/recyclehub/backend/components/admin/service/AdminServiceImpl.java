@@ -5,6 +5,7 @@ import com.recyclehub.backend.components.admin.dto.AdminResponse;
 import com.recyclehub.backend.components.admin.mapper.AdminMapper;
 import com.recyclehub.backend.components.admin.repository.AdminRepository;
 import com.recyclehub.backend.entities.Admin;
+import com.recyclehub.backend.exception.DuplicateResourceException;
 import com.recyclehub.backend.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,16 +36,13 @@ public class AdminServiceImpl implements AdminService {
         log.info("Registering new admin with email: {}", request.getEmail());
         
         if (adminRepository.findByEmail(request.getEmail()).isPresent()) {
-            log.error("Email already taken: {}", request.getEmail());
-            throw new IllegalStateException("Email already taken");
+            log.error("Email already exists: {}", request.getEmail());
+            throw new DuplicateResourceException("Email already exists");
         }
-
-        String encodedPassword = passwordEncoder.encode(request.getPassword());
-        log.debug("Password encoded successfully");
 
         Admin admin = Admin.builder()
                 .email(request.getEmail())
-                .password(encodedPassword)
+                .password(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .phone(request.getPhone())

@@ -23,13 +23,13 @@ public class HouseHoldController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('INDIVIDUAL')")
+    @PreAuthorize("hasRole('HOUSEHOLD')")
     public ResponseEntity<HouseHoldResponse> getProfile(@PathVariable Long id) {
         return ResponseEntity.ok(service.getProfile(id));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('INDIVIDUAL')")
+    @PreAuthorize("hasRole('HOUSEHOLD')")
     public ResponseEntity<HouseHoldResponse> updateProfile(
             @PathVariable Long id,
             @Valid @RequestBody HouseHoldRequest request) {
@@ -37,7 +37,7 @@ public class HouseHoldController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('INDIVIDUAL')")
+    @PreAuthorize("hasRole('HOUSEHOLD')")
     public ResponseEntity<Void> deleteProfile(@PathVariable Long id) {
         service.deleteProfile(id);
         return ResponseEntity.noContent().build();
