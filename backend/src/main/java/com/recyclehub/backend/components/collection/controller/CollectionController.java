@@ -1,6 +1,7 @@
 package com.recyclehub.backend.components.collection.controller;
 
 import com.recyclehub.backend.components.collection.dto.CollectionRequestDTO;
+import com.recyclehub.backend.components.collection.dto.CompleteCollectionDTO;
 import com.recyclehub.backend.components.collection.service.CollectionService;
 import com.recyclehub.backend.enums.RequestStatus;
 import com.recyclehub.backend.security.CurrentUser;
@@ -73,10 +74,13 @@ public class CollectionController {
     @PreAuthorize("hasRole('ROLE_COLLECTOR')")
     public ResponseEntity<CollectionRequestDTO> completeCollection(
             @PathVariable Long requestId,
-            @RequestParam Integer actualWeight,
-            @RequestBody List<String> photos,
+            @Valid @RequestBody CompleteCollectionDTO completeRequest,
             @CurrentUser UserPrincipal user) {
-        return ResponseEntity.ok(collectionService.completeCollection(requestId, actualWeight, photos, user.getId()));
+        return ResponseEntity.ok(collectionService.completeCollection(
+                requestId, 
+                completeRequest.getActualWeight(), 
+                completeRequest.getPhotos(), 
+                user.getId()));
     }
 
     @GetMapping("/collector")
