@@ -25,6 +25,8 @@ public class Voucher {
     private Integer pointsSpent;
     private Double value;  // in Dh
     private LocalDateTime createdAt;
+    
+    @Builder.Default
     private Boolean isUsed = false;
     
     @Column(name = "updated_at")

@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -28,11 +29,13 @@ public class CollectionRequest {
     @JoinColumn(name = "collector_id")
     private Collector collector;
     
-    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL)
-    private List<WasteItem> wasteItems;
+    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<WasteItem> wasteItems = new ArrayList<>();
     
-    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL)
-    private List<RequestPhoto> photos;
+    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<RequestPhoto> photos = new ArrayList<>();
     
     private String street;
     private String city;
@@ -43,6 +46,7 @@ public class CollectionRequest {
     private String notes;
     
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private RequestStatus status = RequestStatus.PENDING;
     
     private Double actualWeight;  // recorded by collector
