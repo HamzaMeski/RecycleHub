@@ -4,6 +4,7 @@ import com.recyclehub.backend.components.collection.dto.CollectionRequestDTO;
 import com.recyclehub.backend.components.collection.service.CollectionService;
 import com.recyclehub.backend.enums.RequestStatus;
 import com.recyclehub.backend.security.CurrentUser;
+import com.recyclehub.backend.security.UserPrincipal;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,74 +20,74 @@ public class CollectionController {
 
     private final CollectionService collectionService;
 
-    // Household endpoints
+    // Individual endpoints
     @PostMapping
-    @PreAuthorize("hasRole('HOUSEHOLD')")
+    @PreAuthorize("hasRole('ROLE_INDIVIDUAL')")
     public ResponseEntity<CollectionRequestDTO> createRequest(
             @Valid @RequestBody CollectionRequestDTO request,
-            @CurrentUser Long userId) {
-        return ResponseEntity.ok(collectionService.createRequest(request, userId));
+            @CurrentUser UserPrincipal user) {
+        return ResponseEntity.ok(collectionService.createRequest(request, user.getId()));
     }
 
     @PutMapping("/{requestId}")
-    @PreAuthorize("hasRole('HOUSEHOLD')")
+    @PreAuthorize("hasRole('ROLE_INDIVIDUAL')")
     public ResponseEntity<CollectionRequestDTO> updateRequest(
             @PathVariable Long requestId,
             @Valid @RequestBody CollectionRequestDTO request,
-            @CurrentUser Long userId) {
-        return ResponseEntity.ok(collectionService.updateRequest(requestId, request, userId));
+            @CurrentUser UserPrincipal user) {
+        return ResponseEntity.ok(collectionService.updateRequest(requestId, request, user.getId()));
     }
 
     @DeleteMapping("/{requestId}")
-    @PreAuthorize("hasRole('HOUSEHOLD')")
+    @PreAuthorize("hasRole('ROLE_INDIVIDUAL')")
     public ResponseEntity<Void> deleteRequest(
             @PathVariable Long requestId,
-            @CurrentUser Long userId) {
-        collectionService.deleteRequest(requestId, userId);
+            @CurrentUser UserPrincipal user) {
+        collectionService.deleteRequest(requestId, user.getId());
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/household")
-    @PreAuthorize("hasRole('HOUSEHOLD')")
-    public ResponseEntity<List<CollectionRequestDTO>> getHouseholdRequests(@CurrentUser Long userId) {
-        return ResponseEntity.ok(collectionService.getHouseholdRequests(userId));
+    @PreAuthorize("hasRole('ROLE_INDIVIDUAL')")
+    public ResponseEntity<List<CollectionRequestDTO>> getHouseholdRequests(@CurrentUser UserPrincipal user) {
+        return ResponseEntity.ok(collectionService.getHouseholdRequests(user.getId()));
     }
 
     // Collector endpoints
     @GetMapping("/available")
-    @PreAuthorize("hasRole('COLLECTOR')")
+    @PreAuthorize("hasRole('ROLE_COLLECTOR')")
     public ResponseEntity<List<CollectionRequestDTO>> getAvailableRequests(@RequestParam String city) {
         return ResponseEntity.ok(collectionService.getAvailableRequestsInCity(city));
     }
 
     @PutMapping("/{requestId}/status")
-    @PreAuthorize("hasRole('COLLECTOR')")
+    @PreAuthorize("hasRole('ROLE_COLLECTOR')")
     public ResponseEntity<CollectionRequestDTO> updateRequestStatus(
             @PathVariable Long requestId,
             @RequestParam RequestStatus status,
-            @CurrentUser Long userId) {
-        return ResponseEntity.ok(collectionService.updateRequestStatus(requestId, status, userId));
+            @CurrentUser UserPrincipal user) {
+        return ResponseEntity.ok(collectionService.updateRequestStatus(requestId, status, user.getId()));
     }
 
     @PutMapping("/{requestId}/complete")
-    @PreAuthorize("hasRole('COLLECTOR')")
+    @PreAuthorize("hasRole('ROLE_COLLECTOR')")
     public ResponseEntity<CollectionRequestDTO> completeCollection(
             @PathVariable Long requestId,
             @RequestParam Integer actualWeight,
             @RequestBody List<String> photos,
-            @CurrentUser Long userId) {
-        return ResponseEntity.ok(collectionService.completeCollection(requestId, actualWeight, photos, userId));
+            @CurrentUser UserPrincipal user) {
+        return ResponseEntity.ok(collectionService.completeCollection(requestId, actualWeight, photos, user.getId()));
     }
 
     @GetMapping("/collector")
-    @PreAuthorize("hasRole('COLLECTOR')")
-    public ResponseEntity<List<CollectionRequestDTO>> getCollectorRequests(@CurrentUser Long userId) {
-        return ResponseEntity.ok(collectionService.getCollectorRequests(userId));
+    @PreAuthorize("hasRole('ROLE_COLLECTOR')")
+    public ResponseEntity<List<CollectionRequestDTO>> getCollectorRequests(@CurrentUser UserPrincipal user) {
+        return ResponseEntity.ok(collectionService.getCollectorRequests(user.getId()));
     }
 
     // Common endpoints
     @GetMapping("/{requestId}")
-    @PreAuthorize("hasAnyRole('HOUSEHOLD', 'COLLECTOR')")
+    @PreAuthorize("hasAnyRole('ROLE_INDIVIDUAL', 'ROLE_COLLECTOR')")
     public ResponseEntity<CollectionRequestDTO> getRequestById(@PathVariable Long requestId) {
         return ResponseEntity.ok(collectionService.getRequestById(requestId));
     }

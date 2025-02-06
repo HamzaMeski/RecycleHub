@@ -6,7 +6,6 @@ import com.recyclehub.backend.components.houseHold.repository.HouseHoldRepositor
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -31,31 +30,34 @@ public class CustomUserDetailsService implements UserDetailsService {
         return adminRepository.findByEmail(email)
                 .map(admin -> {
                     log.info("Found admin user: {}", admin.getEmail());
-                    return new User(
-                            admin.getEmail(),
-                            admin.getPassword(),
-                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN"))
-                    );
+                    return UserPrincipal.builder()
+                            .id(admin.getId())
+                            .email(admin.getEmail())
+                            .password(admin.getPassword())
+                            .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                            .build();
                 })
                 // If not found, try collector table
                 .orElseGet(() -> collectorRepository.findByEmail(email)
                         .map(collector -> {
                             log.info("Found collector user: {}", collector.getEmail());
-                            return new User(
-                                    collector.getEmail(),
-                                    collector.getPassword(),
-                                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_COLLECTOR"))
-                            );
+                            return UserPrincipal.builder()
+                                    .id(collector.getId())
+                                    .email(collector.getEmail())
+                                    .password(collector.getPassword())
+                                    .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_COLLECTOR")))
+                                    .build();
                         })
                         // If not found, try household table
                         .orElseGet(() -> houseHoldRepository.findByEmail(email)
                                 .map(household -> {
                                     log.info("Found household user: {}", household.getEmail());
-                                    return new User(
-                                            household.getEmail(),
-                                            household.getPassword(),
-                                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_INDIVIDUAL"))
-                                    );
+                                    return UserPrincipal.builder()
+                                            .id(household.getId())
+                                            .email(household.getEmail())
+                                            .password(household.getPassword())
+                                            .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_INDIVIDUAL")))
+                                            .build();
                                 })
                                 .orElseThrow(() -> {
                                     log.error("No user found with email: {}", email);
