@@ -41,7 +41,7 @@ export class AuthEffects {
         tap(({ user }) => {
           console.log('Login success effect triggered. User type:', user.userType);
           switch (user.userType) {
-            case 'INDIVIDUAL':
+            case 'HOUSEHOLD':
               console.log('Redirecting to household dashboard');
               this.router.navigate(['/household']);
               break;
@@ -54,7 +54,7 @@ export class AuthEffects {
               this.router.navigate(['/admin']);
               break;
             default:
-              console.log('Unknown user type, redirecting to home');
+              console.log('Unknown user type:', user.userType);
               this.router.navigate(['/']);
           }
         })
