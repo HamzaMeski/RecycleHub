@@ -56,7 +56,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                                             .id(household.getId())
                                             .email(household.getEmail())
                                             .password(household.getPassword())
-                                            .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_INDIVIDUAL")))
+                                            .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_HOUSEHOLD")))
                                             .build();
                                 })
                                 .orElseThrow(() -> {

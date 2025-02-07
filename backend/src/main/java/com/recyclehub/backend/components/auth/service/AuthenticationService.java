@@ -58,7 +58,7 @@ public class AuthenticationService {
                         .orElseGet(() -> houseHoldRepository.findByEmail(request.getEmail())
                                 .map(household -> {
                                     log.info("Building auth response for household: {}", household.getEmail());
-                                    return buildAuthResponse(household, "INDIVIDUAL");
+                                    return buildAuthResponse(household, "HOUSEHOLD");
                                 })
                                 .orElseThrow(() -> {
                                     log.error("No user found with email: {}", request.getEmail());

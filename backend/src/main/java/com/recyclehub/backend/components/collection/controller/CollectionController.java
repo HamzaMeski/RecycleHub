@@ -23,7 +23,7 @@ public class CollectionController {
 
     // Individual endpoints
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_INDIVIDUAL')")
+    @PreAuthorize("hasRole('ROLE_HOUSEHOLD')")
     public ResponseEntity<CollectionRequestDTO> createRequest(
             @Valid @RequestBody CollectionRequestDTO request,
             @CurrentUser UserPrincipal user) {
@@ -31,7 +31,7 @@ public class CollectionController {
     }
 
     @PutMapping("/{requestId}")
-    @PreAuthorize("hasRole('ROLE_INDIVIDUAL')")
+    @PreAuthorize("hasRole('ROLE_HOUSEHOLD')")
     public ResponseEntity<CollectionRequestDTO> updateRequest(
             @PathVariable Long requestId,
             @Valid @RequestBody CollectionRequestDTO request,
@@ -40,7 +40,7 @@ public class CollectionController {
     }
 
     @DeleteMapping("/{requestId}")
-    @PreAuthorize("hasRole('ROLE_INDIVIDUAL')")
+    @PreAuthorize("hasRole('ROLE_HOUSEHOLD')")
     public ResponseEntity<Void> deleteRequest(
             @PathVariable Long requestId,
             @CurrentUser UserPrincipal user) {
@@ -49,7 +49,7 @@ public class CollectionController {
     }
 
     @GetMapping("/household")
-    @PreAuthorize("hasRole('ROLE_INDIVIDUAL')")
+    @PreAuthorize("hasRole('ROLE_HOUSEHOLD')")
     public ResponseEntity<List<CollectionRequestDTO>> getHouseholdRequests(@CurrentUser UserPrincipal user) {
         return ResponseEntity.ok(collectionService.getHouseholdRequests(user.getId()));
     }
@@ -91,7 +91,7 @@ public class CollectionController {
 
     // Common endpoints
     @GetMapping("/{requestId}")
-    @PreAuthorize("hasAnyRole('ROLE_INDIVIDUAL', 'ROLE_COLLECTOR')")
+    @PreAuthorize("hasAnyRole('ROLE_HOUSEHOLD', 'ROLE_COLLECTOR')")
     public ResponseEntity<CollectionRequestDTO> getRequestById(@PathVariable Long requestId) {
         return ResponseEntity.ok(collectionService.getRequestById(requestId));
     }
