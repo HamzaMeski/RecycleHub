@@ -43,7 +43,7 @@ export class AuthEffects {
           switch (user.userType) {
             case 'INDIVIDUAL':
               console.log('Redirecting to household dashboard');
-              this.router.navigate(['/dashboard']);
+              this.router.navigate(['/household']);
               break;
             case 'COLLECTOR':
               console.log('Redirecting to collector dashboard');
