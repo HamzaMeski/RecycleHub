@@ -15,17 +15,52 @@ export class AuthEffects {
   login$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.login),
+      tap(action => console.log('Login action dispatched:', action)),
       exhaustMap(({ credentials }) =>
         this.authService.login(credentials).pipe(
+          tap(response => console.log('Login API response:', response)),
           map(user => {
+            console.log('Storing user data in localStorage');
             localStorage.setItem('token', user.token);
             localStorage.setItem('user', JSON.stringify(user));
             return AuthActions.loginSuccess({ user });
           }),
-          catchError(error => of(AuthActions.loginFailure({ error: error.message })))
+          catchError(error => {
+            console.error('Login error:', error);
+            return of(AuthActions.loginFailure({ error: error.message || 'Login failed' }));
+          })
         )
       )
     )
+  );
+
+  loginSuccess$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(AuthActions.loginSuccess),
+        tap(({ user }) => {
+          console.log('Login success effect triggered. User type:', user.userType);
+          // Redirect based on user type
+          switch (user.userType) {
+            case 'INDIVIDUAL':
+              console.log('Redirecting to household dashboard');
+              this.router.navigate(['/dashboard']);
+              break;
+            case 'COLLECTOR':
+              console.log('Redirecting to collector dashboard');
+              this.router.navigate(['/collector']);
+              break;
+            case 'ADMIN':
+              console.log('Redirecting to admin dashboard');
+              this.router.navigate(['/admin']);
+              break;
+            default:
+              console.log('Unknown user type, redirecting to home');
+              this.router.navigate(['/']);
+          }
+        })
+      ),
+    { dispatch: false }
   );
 
   registerHouseHold$ = createEffect(() =>
@@ -38,30 +73,6 @@ export class AuthEffects {
         )
       )
     )
-  );
-
-  loginSuccess$ = createEffect(
-    () =>
-      this.actions$.pipe(
-        ofType(AuthActions.loginSuccess),
-        tap(({ user }) => {
-          // Redirect based on user type
-          switch (user.userType) {
-            case 'HOUSEHOLD':
-              this.router.navigate(['/dashboard']);
-              break;
-            case 'COLLECTOR':
-              this.router.navigate(['/collector']);
-              break;
-            case 'ADMIN':
-              this.router.navigate(['/admin']);
-              break;
-            default:
-              this.router.navigate(['/']);
-          }
-        })
-      ),
-    { dispatch: false }
   );
 
   registerSuccess$ = createEffect(

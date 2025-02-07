@@ -5,7 +5,7 @@ export interface AuthRequest {
 
 export interface AuthResponse {
   token: string;
-  userType: 'ADMIN' | 'COLLECTOR' | 'HOUSEHOLD';
+  userType: 'ADMIN' | 'COLLECTOR' | 'INDIVIDUAL';
   userId: number;
   email: string;
   firstName: string;
