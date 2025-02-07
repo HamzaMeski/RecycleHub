@@ -1,15 +1,20 @@
 import { Component } from '@angular/core';
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { registerHouseHold } from '@store/actions/auth.actions';
-import { Router } from '@angular/router';
-import {AsyncPipe} from '@angular/common';
+import { AppState } from '@store/index';
+import { selectAuthError, selectAuthLoading } from '@store/selectors/auth.selectors';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-register',
+  standalone: true,
   imports: [
+    CommonModule,
     ReactiveFormsModule,
-    AsyncPipe
+    RouterLink
   ],
   template: `
     <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -27,42 +32,42 @@ import {AsyncPipe} from '@angular/common';
               <div>
                 <label for="firstName" class="sr-only">First Name</label>
                 <input formControlName="firstName" type="text"
-                       class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                       placeholder="First Name">
+                  class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  placeholder="First Name">
               </div>
               <div>
                 <label for="lastName" class="sr-only">Last Name</label>
                 <input formControlName="lastName" type="text"
-                       class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                       placeholder="Last Name">
+                  class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  placeholder="Last Name">
               </div>
             </div>
 
             <div>
               <label for="email" class="sr-only">Email address</label>
               <input formControlName="email" type="email"
-                     class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                     placeholder="Email address">
+                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Email address">
             </div>
 
             <div>
               <label for="password" class="sr-only">Password</label>
               <input formControlName="password" type="password"
-                     class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                     placeholder="Password">
+                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Password">
             </div>
 
             <div>
               <label for="phone" class="sr-only">Phone</label>
               <input formControlName="phone" type="tel"
-                     class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                     placeholder="Phone">
+                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Phone">
             </div>
 
             <div>
               <label for="dateOfBirth" class="sr-only">Date of Birth</label>
               <input formControlName="dateOfBirth" type="date"
-                     class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm">
+                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm">
             </div>
           </div>
 
@@ -71,42 +76,42 @@ import {AsyncPipe} from '@angular/common';
             <div>
               <label for="street" class="sr-only">Street</label>
               <input formControlName="street" type="text"
-                     class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                     placeholder="Street">
+                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Street">
             </div>
 
             <div>
               <label for="city" class="sr-only">City</label>
               <input formControlName="city" type="text"
-                     class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                     placeholder="City">
+                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="City">
             </div>
 
             <div>
               <label for="country" class="sr-only">Country</label>
               <input formControlName="country" type="text"
-                     class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                     placeholder="Country">
+                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Country">
             </div>
 
             <div>
               <label for="zipCode" class="sr-only">Zip Code</label>
               <input formControlName="zipCode" type="text"
-                     class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                     placeholder="Zip Code">
+                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Zip Code">
             </div>
           </div>
 
-          <!-- Error Messages -->
-          <div *ngIf="error$ | async as error" class="text-red-500 text-sm">
+          <!-- Error Message -->
+          <div *ngIf="error$ | async as error" class="text-red-500 text-sm text-center">
             {{ error }}
           </div>
 
           <!-- Submit Button -->
           <div>
             <button type="submit"
-                    [disabled]="registerForm.invalid || (loading$ | async)"
-                    class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
+              [disabled]="registerForm.invalid || (loading$ | async)"
+              class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
               <span *ngIf="loading$ | async">Registering...</span>
               <span *ngIf="!(loading$ | async)">Register</span>
             </button>
@@ -125,16 +130,16 @@ import {AsyncPipe} from '@angular/common';
 })
 export class RegisterComponent {
   registerForm: FormGroup;
-  // @ts-ignore
-  loading$ = this.store.select(state => state.auth.loading);
-  // @ts-ignore
-  error$ = this.store.select(state => state.auth.error);
+  loading$: Observable<boolean>;
+  error$: Observable<string | null>;
 
   constructor(
     private fb: FormBuilder,
-    private store: Store,
-    private router: Router
+    private store: Store<AppState>
   ) {
+    this.loading$ = this.store.select(selectAuthLoading);
+    this.error$ = this.store.select(selectAuthError);
+    
     this.registerForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
