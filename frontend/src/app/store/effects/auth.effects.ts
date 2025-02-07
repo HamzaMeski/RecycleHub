@@ -40,7 +40,6 @@ export class AuthEffects {
         ofType(AuthActions.loginSuccess),
         tap(({ user }) => {
           console.log('Login success effect triggered. User type:', user.userType);
-          // Redirect based on user type
           switch (user.userType) {
             case 'INDIVIDUAL':
               console.log('Redirecting to household dashboard');
@@ -58,6 +57,18 @@ export class AuthEffects {
               console.log('Unknown user type, redirecting to home');
               this.router.navigate(['/']);
           }
+        })
+      ),
+    { dispatch: false }
+  );
+
+  logout$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(AuthActions.logout),
+        tap(() => {
+          this.authService.logout();
+          this.router.navigate(['/auth/login']);
         })
       ),
     { dispatch: false }
