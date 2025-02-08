@@ -17,13 +17,27 @@ export const routes: Routes = [
   },
   {
     path: 'household',
-    component: HouseholdDashboardComponent,
-    canActivate: [AuthGuard]
-  },
-  {
-    path: 'household/profile',
-    component: ProfileComponent,
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    children: [
+      {
+        path: '',
+        component: HouseholdDashboardComponent
+      },
+      {
+        path: 'profile',
+        component: ProfileComponent
+      },
+      {
+        path: 'collections',
+        loadChildren: () => import('./features/household/collections/collections.routes')
+          .then(m => m.COLLECTIONS_ROUTES)
+      },
+      {
+        path: 'rewards',
+        loadChildren: () => import('./features/household/rewards/rewards.routes')
+          .then(m => m.REWARDS_ROUTES)
+      }
+    ]
   },
   {
     path: 'admin',
