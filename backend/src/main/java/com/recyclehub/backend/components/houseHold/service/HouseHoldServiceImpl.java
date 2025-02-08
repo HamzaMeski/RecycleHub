@@ -56,11 +56,15 @@ public class HouseHoldServiceImpl implements HouseHoldService {
         
         HouseHold houseHold = findHouseHoldById(id);
 
-        // Check if email is being changed and if it's already taken
-        if (!houseHold.getEmail().equals(request.getEmail()) && 
-            repository.existsByEmail(request.getEmail())) {
-            log.error("Email already exists: {}", request.getEmail());
-            throw new DuplicateResourceException("Email already exists");
+        // Check if email is being changed and if it's already taken by another user
+        if (!houseHold.getEmail().equals(request.getEmail())) {
+            repository.findByEmail(request.getEmail())
+                .ifPresent(existingUser -> {
+                    if (!existingUser.getId().equals(id)) {
+                        log.error("Email {} is already taken by another user", request.getEmail());
+                        throw new DuplicateResourceException("Email already exists");
+                    }
+                });
         }
 
         // Update the password only if it's provided in the request
