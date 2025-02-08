@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, PLATFORM_ID, Inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProfileService, ProfileResponse } from '@core/services/profile.service';
 
@@ -135,7 +135,8 @@ export class ProfileComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private profileService: ProfileService
+    private profileService: ProfileService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.profileForm = this.fb.group({
       firstName: ['', Validators.required],
@@ -151,12 +152,13 @@ export class ProfileComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Get user ID from localStorage
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      this.userId = user.userId;
-      this.loadProfile();
+    if (isPlatformBrowser(this.platformId)) {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        this.userId = user.userId;
+        this.loadProfile();
+      }
     }
   }
 
