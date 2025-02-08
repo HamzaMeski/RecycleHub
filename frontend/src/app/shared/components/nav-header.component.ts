@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { selectAuthUser } from '@store/selectors/auth.selectors';
 import { Observable } from 'rxjs';
@@ -10,7 +10,7 @@ import { logout } from '@store/actions/auth.actions';
 @Component({
   selector: 'app-nav-header',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink],
   template: `
     <nav class="bg-green-600 shadow-lg">
       <div class="max-w-7xl mx-auto px-4 flex justify-between">

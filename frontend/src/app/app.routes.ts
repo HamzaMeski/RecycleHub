@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { HouseholdDashboardComponent } from './features/household/household-dashboard.component';
 import { AdminDashboardComponent } from './features/admin/admin-dashboard.component';
 import { CollectorDashboardComponent } from './features/collector/collector-dashboard.component';
+import { ProfileComponent } from './features/household/profile/profile.component';
 import { AuthGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
@@ -17,6 +18,11 @@ export const routes: Routes = [
   {
     path: 'household',
     component: HouseholdDashboardComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'household/profile',
+    component: ProfileComponent,
     canActivate: [AuthGuard]
   },
   {
