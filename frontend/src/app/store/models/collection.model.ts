@@ -1,16 +1,7 @@
-export interface Collection {
-  id: number;
-  createdAt: Date;
-  status: 'PENDING' | 'ACCEPTED' | 'COMPLETED' | 'CANCELLED';
-  collectionAddress: string;
-  city: string;
-  notes?: string;
-  weightInGrams: number;
+import { CollectionRequestDTO } from '@shared/models/collection.model';
+
+export interface Collection extends CollectionRequestDTO {
   points?: number;
-  wasteTypes: string[];
-  photos?: string[];
-  collectorId?: number;
-  householdId: number;
 }
 
 export interface CollectionState {
