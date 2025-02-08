@@ -1,28 +1,33 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DashboardLayoutComponent } from '@shared/components/dashboard-layout/dashboard-layout.component';
+import { Router } from '@angular/router';
+import { CollectionService } from '@core/services/collection.service';
+import { CollectionRequestDTO } from '@shared/models/collection.model';
+import { WasteType } from '@shared/models/waste-type.enum';
 
 @Component({
   selector: 'app-collection-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, DashboardLayoutComponent],
   template: `
-    <app-dashboard-layout
-      sectionTitle="New Collection Request"
-      [sidebarLinks]="sidebarLinks"
-    >
-      <div class="max-w-3xl mx-auto">
+    <app-dashboard-layout [sidebarLinks]="sidebarLinks">
+      <div class="container mx-auto px-4 py-8">
         <div class="bg-white rounded-lg shadow p-6">
           <h1 class="text-2xl font-bold text-gray-800 mb-6">Create Collection Request</h1>
           
+          <div *ngIf="error" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+            {{ error }}
+          </div>
+
           <form [formGroup]="collectionForm" (ngSubmit)="onSubmit()" class="space-y-6">
             <!-- Waste Types -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
-                Waste Types
+                Waste Types*
               </label>
-              <div class="grid grid-cols-2 gap-4">
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div *ngFor="let type of wasteTypes" class="flex items-center">
                   <input
                     type="checkbox"
@@ -30,44 +35,53 @@ import { DashboardLayoutComponent } from '@shared/components/dashboard-layout/da
                     [value]="type.value"
                     (change)="onWasteTypeChange($event)"
                     class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                  >
+                  />
                   <label [for]="type.value" class="ml-2 block text-sm text-gray-900">
                     {{ type.label }}
                   </label>
                 </div>
               </div>
+              <p *ngIf="showWasteTypeError" class="mt-1 text-sm text-red-600">
+                Please select at least one waste type
+              </p>
             </div>
 
             <!-- Weight -->
             <div>
-              <label for="weight" class="block text-sm font-medium text-gray-700 mb-2">
-                Estimated Weight (in grams)
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Weight (in grams)*
               </label>
               <input
                 type="number"
-                id="weight"
                 formControlName="weightInGrams"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                 placeholder="Enter weight in grams"
-              >
+              />
               <p *ngIf="collectionForm.get('weightInGrams')?.errors?.['required'] && collectionForm.get('weightInGrams')?.touched"
                  class="mt-1 text-sm text-red-600">
                 Weight is required
+              </p>
+              <p *ngIf="collectionForm.get('weightInGrams')?.errors?.['min'] && collectionForm.get('weightInGrams')?.touched"
+                 class="mt-1 text-sm text-red-600">
+                Weight must be at least 1000 grams
+              </p>
+              <p *ngIf="collectionForm.get('weightInGrams')?.errors?.['max'] && collectionForm.get('weightInGrams')?.touched"
+                 class="mt-1 text-sm text-red-600">
+                Weight cannot exceed 10000 grams (10 kg)
               </p>
             </div>
 
             <!-- Collection Address -->
             <div>
-              <label for="address" class="block text-sm font-medium text-gray-700 mb-2">
-                Collection Address
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Collection Address*
               </label>
               <input
                 type="text"
-                id="address"
                 formControlName="collectionAddress"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                 placeholder="Enter collection address"
-              >
+              />
               <p *ngIf="collectionForm.get('collectionAddress')?.errors?.['required'] && collectionForm.get('collectionAddress')?.touched"
                  class="mt-1 text-sm text-red-600">
                 Collection address is required
@@ -76,16 +90,15 @@ import { DashboardLayoutComponent } from '@shared/components/dashboard-layout/da
 
             <!-- City -->
             <div>
-              <label for="city" class="block text-sm font-medium text-gray-700 mb-2">
-                City
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                City*
               </label>
               <input
                 type="text"
-                id="city"
                 formControlName="city"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                 placeholder="Enter city"
-              >
+              />
               <p *ngIf="collectionForm.get('city')?.errors?.['required'] && collectionForm.get('city')?.touched"
                  class="mt-1 text-sm text-red-600">
                 City is required
@@ -94,15 +107,14 @@ import { DashboardLayoutComponent } from '@shared/components/dashboard-layout/da
 
             <!-- Notes -->
             <div>
-              <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
-                Additional Notes
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Notes
               </label>
               <textarea
-                id="notes"
                 formControlName="notes"
                 rows="3"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                placeholder="Any special instructions or notes"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                placeholder="Add any additional notes"
               ></textarea>
             </div>
 
@@ -133,14 +145,35 @@ import { DashboardLayoutComponent } from '@shared/components/dashboard-layout/da
                       class="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500"
                     >
                       <span>Upload files</span>
-                      <input id="file-upload" name="file-upload" type="file" class="sr-only" multiple (change)="onFileSelected($event)">
+                      <input
+                        id="file-upload"
+                        type="file"
+                        class="sr-only"
+                        multiple
+                        (change)="onFileSelected($event)"
+                        accept="image/*"
+                      />
                     </label>
                     <p class="pl-1">or drag and drop</p>
                   </div>
-                  <p class="text-xs text-gray-500">
-                    PNG, JPG, GIF up to 10MB
-                  </p>
+                  <p class="text-xs text-gray-500">PNG, JPG up to 10MB</p>
                 </div>
+              </div>
+              <!-- Selected Files Preview -->
+              <div *ngIf="selectedFiles.length > 0" class="mt-4">
+                <h4 class="text-sm font-medium text-gray-700">Selected Files:</h4>
+                <ul class="mt-2 divide-y divide-gray-200">
+                  <li *ngFor="let file of selectedFiles; let i = index" class="py-2 flex justify-between items-center">
+                    <span class="text-sm text-gray-600">{{ file.name }}</span>
+                    <button
+                      type="button"
+                      (click)="removeFile(i)"
+                      class="text-red-600 hover:text-red-800"
+                    >
+                      Remove
+                    </button>
+                  </li>
+                </ul>
               </div>
             </div>
 
@@ -148,9 +181,10 @@ import { DashboardLayoutComponent } from '@shared/components/dashboard-layout/da
             <div class="flex justify-end">
               <button
                 type="submit"
-                [disabled]="!collectionForm.valid"
-                class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                [disabled]="!collectionForm.valid || selectedWasteTypes.length === 0 || isSubmitting"
+                class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
               >
+                <span *ngIf="isSubmitting" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
                 Create Collection Request
               </button>
             </div>
@@ -160,27 +194,17 @@ import { DashboardLayoutComponent } from '@shared/components/dashboard-layout/da
     </app-dashboard-layout>
   `
 })
-export class CollectionFormComponent {
+export class CollectionFormComponent implements OnInit {
   sidebarLinks = [
     {
       icon: '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>',
       label: 'Dashboard',
-      route: '/household'
+      route: '/household/dashboard'
     },
     {
-      icon: '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>',
-      label: 'New Collection',
-      route: '/household/collections/new'
-    },
-    {
-      icon: '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>',
-      label: 'My Collections',
+      icon: '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>',
+      label: 'Collections',
       route: '/household/collections'
-    },
-    {
-      icon: '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>',
-      label: 'Points & Rewards',
-      route: '/household/rewards'
     },
     {
       icon: '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>',
@@ -189,22 +213,33 @@ export class CollectionFormComponent {
     }
   ];
 
-  collectionForm: FormGroup;
-  selectedWasteTypes: string[] = [];
+  collectionForm!: FormGroup;
+  selectedWasteTypes: WasteType[] = [];
   selectedFiles: File[] = [];
+  showWasteTypeError = false;
+  isSubmitting = false;
+  error: string | null = null;
 
   wasteTypes = [
-    { value: 'PLASTIC', label: 'Plastic' },
-    { value: 'PAPER', label: 'Paper' },
-    { value: 'GLASS', label: 'Glass' },
-    { value: 'METAL', label: 'Metal' },
-    { value: 'ELECTRONICS', label: 'Electronics' },
-    { value: 'ORGANIC', label: 'Organic' }
+    { value: WasteType.PLASTIC, label: 'Plastic' },
+    { value: WasteType.PAPER, label: 'Paper' },
+    { value: WasteType.GLASS, label: 'Glass' },
+    { value: WasteType.METAL, label: 'Metal' }
   ];
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private collectionService: CollectionService,
+    private router: Router
+  ) {}
+
+  ngOnInit() {
+    this.initializeForm();
+  }
+
+  private initializeForm() {
     this.collectionForm = this.fb.group({
-      weightInGrams: ['', [Validators.required, Validators.min(1)]],
+      weightInGrams: ['', [Validators.required, Validators.min(1000), Validators.max(10000)]],
       collectionAddress: ['', Validators.required],
       city: ['', Validators.required],
       notes: ['']
@@ -223,23 +258,41 @@ export class CollectionFormComponent {
         this.selectedWasteTypes.splice(index, 1);
       }
     }
+    this.showWasteTypeError = false;
   }
 
   onFileSelected(event: any) {
-    const files = event.target.files;
+    const files: FileList = event.target.files;
     this.selectedFiles = Array.from(files);
   }
 
-  onSubmit() {
-    if (this.collectionForm.valid && this.selectedWasteTypes.length > 0) {
-      const formData = {
-        ...this.collectionForm.value,
-        wasteTypes: this.selectedWasteTypes,
-        photos: this.selectedFiles
-      };
-      
-      console.log('Form submitted:', formData);
-      // TODO: Implement API call to create collection request
+  removeFile(index: number) {
+    this.selectedFiles.splice(index, 1);
+  }
+
+  async onSubmit() {
+    if (this.collectionForm.valid) {
+      if (this.selectedWasteTypes.length === 0) {
+        this.showWasteTypeError = true;
+        return;
+      }
+
+      this.isSubmitting = true;
+      this.error = null;
+
+      try {
+        const formData: CollectionRequestDTO = {
+          ...this.collectionForm.value,
+          wasteTypes: this.selectedWasteTypes
+        };
+
+        await this.collectionService.createCollection(formData).toPromise();
+        this.router.navigate(['/household/collections']);
+      } catch (error: any) {
+        this.error = error.error?.message || 'Failed to create collection request. Please try again.';
+      } finally {
+        this.isSubmitting = false;
+      }
     }
   }
 }
