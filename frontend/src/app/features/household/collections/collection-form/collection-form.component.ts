@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CollectionService } from '@core/services/collection.service';
-import { CollectionRequestDTO } from '@shared/models/collection.model';
-import { WasteType } from '@shared/models/waste-type.enum';
+import { CollectionRequestDTO } from '@shared/types/models';
+import { WasteType } from '@shared/types/enums';
 
 @Component({
   selector: 'app-collection-form',

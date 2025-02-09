@@ -1,4 +1,4 @@
-import { CollectionRequestDTO } from '@shared/models/collection.model';
+import { CollectionRequestDTO } from '../models/collection.model';
 
 export interface Collection extends CollectionRequestDTO {
   points?: number;

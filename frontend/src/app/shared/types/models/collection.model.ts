@@ -1,4 +1,4 @@
-import { WasteType } from './waste-type.enum';
+import { WasteType } from '../enums/waste-type.enum';
 
 export interface CollectionRequestDTO {
   id?: number;

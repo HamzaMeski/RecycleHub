@@ -9,6 +9,7 @@ import { provideRouterStore } from '@ngrx/router-store';
 import { authReducer } from './store/reducers/auth.reducer';
 import { AuthEffects } from './store/effects/auth.effects';
 import { jwtInterceptor } from '@core/interceptors/jwt.interceptor';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -28,6 +29,6 @@ export const appConfig: ApplicationConfig = {
       trace: false,
       traceLimit: 75,
     }),
-    provideRouterStore(),
+    provideRouterStore(), provideAnimationsAsync(),
   ]
 };

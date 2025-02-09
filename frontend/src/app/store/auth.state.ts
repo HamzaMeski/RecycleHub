@@ -1,4 +1,4 @@
-import { AuthResponse } from '@shared/models/auth.models';
+import { AuthResponse } from '@shared/types/models';
 
 export interface AuthState {
   user: AuthResponse | null;

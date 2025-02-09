@@ -1,11 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { CollectionService } from '@core/services/collection.service';
+import { Collection } from '@shared/types/models';
+import { CollectionStatus } from '@shared/types/enums';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { CollectionDialogComponent } from '../collection-dialog/collection-dialog.component';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-collection-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, MatDialogModule, MatButtonModule, MatIconModule],
   template: `
     <div class="container mx-auto px-4 py-8">
       <div class="flex justify-between items-center mb-6">
@@ -21,11 +29,16 @@ import { RouterLink } from '@angular/router';
         </a>
       </div>
 
+      <!-- Error Message -->
+      <div *ngIf="error" class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        {{ error }}
+      </div>
+
       <!-- Filters -->
       <div class="bg-white p-4 rounded-lg shadow mb-6">
         <div class="flex gap-4">
           <button
-            *ngFor="let status of ['All', 'Pending', 'Accepted', 'Completed']"
+            *ngFor="let status of collectionStatuses"
             (click)="filterByStatus(status)"
             [class.bg-green-600]="selectedStatus === status"
             [class.text-white]="selectedStatus === status"
@@ -37,8 +50,13 @@ import { RouterLink } from '@angular/router';
         </div>
       </div>
 
+      <!-- Loading State -->
+      <div *ngIf="loading" class="flex justify-center items-center py-8">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+      </div>
+
       <!-- Collections Table -->
-      <div class="bg-white rounded-lg shadow overflow-hidden">
+      <div *ngIf="!loading" class="bg-white rounded-lg shadow overflow-hidden">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
@@ -61,35 +79,41 @@ import { RouterLink } from '@angular/router';
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ collection.address }}
+                {{ collection.collectionAddress }}, {{ collection.city }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ collection.weightInKg }} kg
+                {{ collection.weightInGrams / 1000 }} kg
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ collection.points }}
+                {{ collection.points || 'N/A' }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="flex gap-2">
                   <button
-                    *ngIf="collection.status === 'PENDING'"
-                    (click)="editCollection(collection.id)"
-                    class="text-blue-600 hover:text-blue-800"
+                    *ngIf="collection.status === CollectionStatus.PENDING"
+                    mat-icon-button
+                    color="primary"
+                    (click)="editCollection(collection)"
+                    matTooltip="Edit Collection"
                   >
-                    Edit
+                    <mat-icon>edit</mat-icon>
                   </button>
                   <button
-                    *ngIf="collection.status === 'PENDING'"
+                    *ngIf="collection.status === CollectionStatus.PENDING"
+                    mat-icon-button
+                    color="warn"
                     (click)="cancelCollection(collection.id)"
-                    class="text-red-600 hover:text-red-800"
+                    matTooltip="Cancel Collection"
                   >
-                    Cancel
+                    <mat-icon>delete</mat-icon>
                   </button>
                   <button
-                    (click)="viewDetails(collection.id)"
-                    class="text-green-600 hover:text-green-800"
+                    mat-icon-button
+                    color="accent"
+                    (click)="viewCollection(collection)"
+                    matTooltip="View Details"
                   >
-                    View
+                    <mat-icon>visibility</mat-icon>
                   </button>
                 </div>
               </td>
@@ -108,31 +132,37 @@ import { RouterLink } from '@angular/router';
   `
 })
 export class CollectionListComponent implements OnInit {
-
-  collections: any[] = [
-    {
-      id: 1,
-      createdAt: new Date(),
-      status: 'PENDING',
-      address: '123 Green St, Eco City',
-      weightInKg: 5.2,
-      points: 52
-    },
-    {
-      id: 2,
-      createdAt: new Date(Date.now() - 86400000), // yesterday
-      status: 'COMPLETED',
-      address: '456 Recycle Ave, Eco City',
-      weightInKg: 3.8,
-      points: 38
-    }
-  ];
-
-  filteredCollections: any[] = [];
+  collections: Collection[] = [];
+  filteredCollections: Collection[] = [];
   selectedStatus: string = 'All';
+  loading = false;
+  error: string | null = null;
+  CollectionStatus = CollectionStatus;
+
+  collectionStatuses = ['All', ...Object.values(CollectionStatus)];
+
+  constructor(
+    private collectionService: CollectionService,
+    private dialog: MatDialog
+  ) {}
 
   ngOnInit() {
-    this.filterByStatus('All');
+    this.loadCollections();
+  }
+
+  loadCollections() {
+    this.loading = true;
+    this.collectionService.getCollections().subscribe({
+      next: (collections) => {
+        this.collections = collections;
+        this.filterByStatus(this.selectedStatus);
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = err.message || 'Failed to load collections';
+        this.loading = false;
+      }
+    });
   }
 
   filterByStatus(status: string) {
@@ -147,29 +177,88 @@ export class CollectionListComponent implements OnInit {
   getStatusClass(status: string): string {
     const baseClasses = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full';
     switch (status) {
-      case 'PENDING':
+      case CollectionStatus.PENDING:
         return `${baseClasses} bg-yellow-100 text-yellow-800`;
-      case 'ACCEPTED':
+      case CollectionStatus.OCCUPIED:
         return `${baseClasses} bg-blue-100 text-blue-800`;
-      case 'COMPLETED':
+      case CollectionStatus.IN_PROGRESS:
+        return `${baseClasses} bg-purple-100 text-purple-800`;
+      case CollectionStatus.VALIDATED:
         return `${baseClasses} bg-green-100 text-green-800`;
+      case CollectionStatus.REJECTED:
+        return `${baseClasses} bg-red-100 text-red-800`;
       default:
         return `${baseClasses} bg-gray-100 text-gray-800`;
     }
   }
 
-  editCollection(id: number) {
-    // TODO: Implement edit functionality
-    console.log('Edit collection:', id);
+  viewCollection(collection: Collection) {
+    this.dialog.open(CollectionDialogComponent, {
+      width: '600px',
+      data: {
+        type: 'view',
+        collection
+      }
+    });
+  }
+
+  editCollection(collection: Collection) {
+    const dialogRef = this.dialog.open(CollectionDialogComponent, {
+      width: '600px',
+      data: {
+        type: 'edit',
+        collection: { ...collection }
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loading = true;
+        this.collectionService.updateCollection(collection.id, result).subscribe({
+          next: (updatedCollection) => {
+            const index = this.collections.findIndex(c => c.id === collection.id);
+            if (index !== -1) {
+              this.collections[index] = updatedCollection;
+              this.filterByStatus(this.selectedStatus);
+            }
+            this.loading = false;
+          },
+          error: (err) => {
+            this.error = err.message || 'Failed to update collection';
+            this.loading = false;
+          }
+        });
+      }
+    });
   }
 
   cancelCollection(id: number) {
-    // TODO: Implement cancel functionality
-    console.log('Cancel collection:', id);
-  }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Cancel Collection',
+        message: 'Are you sure you want to cancel this collection request? This action cannot be undone.',
+        confirmText: 'Cancel Collection',
+        cancelText: 'Keep Collection',
+        isDestructive: true
+      }
+    });
 
-  viewDetails(id: number) {
-    // TODO: Implement view details functionality
-    console.log('View collection:', id);
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.loading = true;
+        this.collectionService.cancelCollection(id).subscribe({
+          next: () => {
+            this.collections = this.collections.filter(c => c.id !== id);
+            this.filterByStatus(this.selectedStatus);
+            this.loading = false;
+          },
+          error: (err) => {
+            this.error = err.message || 'Failed to cancel collection';
+            this.loading = false;
+          }
+        });
+      }
+    });
   }
 }

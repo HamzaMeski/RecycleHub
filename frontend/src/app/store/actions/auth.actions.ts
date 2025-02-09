@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { AuthRequest, AuthResponse, HouseHoldRegisterRequest } from '@shared/models/auth.models';
+import { AuthRequest, AuthResponse, HouseHoldRegisterRequest } from '@shared/types/models';
 
 // Login Actions
 export const login = createAction(

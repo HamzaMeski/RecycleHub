@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { Collection } from '../models/collection.model';
+import { Collection, CollectionState } from '@shared/types/interfaces';
 
 // Load Collections
 export const loadCollections = createAction(
