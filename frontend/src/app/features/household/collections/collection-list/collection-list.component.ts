@@ -213,19 +213,16 @@ export class CollectionListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.loading = true;
-        this.collectionService.updateCollection(collection.id, result).subscribe({
+        this.collectionService.updateRequest(collection.id, result).subscribe({
           next: (updatedCollection) => {
             const index = this.collections.findIndex(c => c.id === collection.id);
             if (index !== -1) {
               this.collections[index] = updatedCollection;
               this.filterByStatus(this.selectedStatus);
             }
-            this.loading = false;
           },
           error: (err) => {
             this.error = err.message || 'Failed to update collection';
-            this.loading = false;
           }
         });
       }
@@ -233,7 +230,7 @@ export class CollectionListComponent implements OnInit {
   }
 
   cancelCollection(id: number) {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+    this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
         title: 'Cancel Collection',
@@ -242,20 +239,15 @@ export class CollectionListComponent implements OnInit {
         cancelText: 'Keep Collection',
         isDestructive: true
       }
-    });
-
-    dialogRef.afterClosed().subscribe(confirmed => {
+    }).afterClosed().subscribe(confirmed => {
       if (confirmed) {
-        this.loading = true;
-        this.collectionService.cancelCollection(id).subscribe({
+        this.collectionService.deleteRequest(id).subscribe({
           next: () => {
             this.collections = this.collections.filter(c => c.id !== id);
             this.filterByStatus(this.selectedStatus);
-            this.loading = false;
           },
           error: (err) => {
             this.error = err.message || 'Failed to cancel collection';
-            this.loading = false;
           }
         });
       }

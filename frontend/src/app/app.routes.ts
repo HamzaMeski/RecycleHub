@@ -1,6 +1,4 @@
 import { Routes } from '@angular/router';
-import { AdminDashboardComponent } from './features/admin/admin-dashboard.component';
-import { CollectorDashboardComponent } from './features/collector/collector-dashboard.component';
 import { AuthGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
@@ -16,22 +14,17 @@ export const routes: Routes = [
   {
     path: 'household',
     canActivate: [AuthGuard],
+    data: { roles: ['ROLE_HOUSEHOLD'] },
     loadChildren: () => import('./features/household/household.routes').then(m => m.HOUSEHOLD_ROUTES)
-  },
-  {
-    path: 'admin',
-    canActivate: [AuthGuard],
-    component: AdminDashboardComponent,
-    children: [
-      // Admin routes...
-    ]
   },
   {
     path: 'collector',
     canActivate: [AuthGuard],
-    component: CollectorDashboardComponent,
-    children: [
-      // Collector routes...
-    ]
+    data: { roles: ['ROLE_COLLECTOR'] },
+    loadChildren: () => import('./features/collector/collector.routes').then(m => m.COLLECTOR_ROUTES)
+  },
+  {
+    path: '**',
+    redirectTo: '/auth/login'
   }
 ];

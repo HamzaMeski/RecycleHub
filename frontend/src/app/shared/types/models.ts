@@ -25,13 +25,12 @@ export interface AuthRequest {
 }
 
 export interface AuthResponse {
-  id: number;
+  token: string;
+  userType: string;  // ADMIN, COLLECTOR, or HOUSEHOLD
+  userId: number;
   email: string;
   firstName: string;
   lastName: string;
-  userType: 'ADMIN' | 'COLLECTOR' | 'HOUSEHOLD';  
-  token: string;                                  
-  tokenType: string;
 }
 
 export interface HouseHoldRegisterRequest {

@@ -257,32 +257,19 @@ export class CollectionFormComponent implements OnInit {
   }
 
   async onSubmit() {
-    if (this.collectionForm.valid) {
-      if (this.selectedWasteTypes.length === 0) {
-        this.showWasteTypeError = true;
-        return;
-      }
-
-      this.isSubmitting = true;
-      this.error = null;
-      this.successMessage = null;
-
-      try {
-        const formData: CollectionRequestDTO = {
-          ...this.collectionForm.value,
-          wasteTypes: this.selectedWasteTypes
-        };
-
-        await this.collectionService.createCollection(formData).toPromise();
-        this.successMessage = 'Collection request created successfully!';
-        this.collectionForm.reset();
-        this.selectedWasteTypes = [];
-        this.selectedFiles = [];
-      } catch (error: any) {
-        this.error = error.error?.message || 'Failed to create collection request. Please try again.';
-      } finally {
-        this.isSubmitting = false;
-      }
+    try {
+      const formData = this.prepareFormData();
+      await this.collectionService.createRequest(formData).toPromise();
+      this.router.navigate(['/household/collections']);
+    } catch (error) {
+      console.error('Error creating collection:', error);
     }
+  }
+
+  private prepareFormData(): CollectionRequestDTO {
+    return {
+      ...this.collectionForm.value,
+      wasteTypes: this.selectedWasteTypes
+    };
   }
 }

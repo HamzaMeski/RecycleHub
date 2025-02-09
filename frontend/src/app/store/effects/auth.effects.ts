@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
-import { map, catchError, exhaustMap, tap } from 'rxjs/operators';
-import { Router } from '@angular/router';
+import { catchError, map, mergeMap, tap } from 'rxjs/operators';
 import { AuthService } from '@core/services/auth.service';
 import * as AuthActions from '../actions/auth.actions';
 
@@ -15,85 +15,57 @@ export class AuthEffects {
   login$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.login),
-      tap(action => console.log('Login action dispatched:', action)),
-      exhaustMap(({ credentials }) =>
+      mergeMap(({ credentials }) =>
         this.authService.login(credentials).pipe(
-          tap(response => console.log('Login API response:', response)),
-          map(user => {
-            console.log('Storing user data in localStorage');
-            localStorage.setItem('token', user.token);
-            localStorage.setItem('user', JSON.stringify(user));
-            return AuthActions.loginSuccess({ user });
-          }),
-          catchError(error => {
-            console.error('Login error:', error);
-            return of(AuthActions.loginFailure({ error: error.message || 'Login failed' }));
-          })
+          map(response => AuthActions.loginSuccess({ user: response })),
+          catchError(error => of(AuthActions.loginFailure({ error: error.error?.message || 'Login failed' })))
         )
       )
     )
   );
 
-  loginSuccess$ = createEffect(
-    () =>
-      this.actions$.pipe(
-        ofType(AuthActions.loginSuccess),
-        tap(({ user }) => {
-          console.log('Login success effect triggered. User type:', user.userType);
-          switch (user.userType) {
-            case 'HOUSEHOLD':
-              console.log('Redirecting to household dashboard');
-              this.router.navigate(['/household']);
-              break;
-            case 'COLLECTOR':
-              console.log('Redirecting to collector dashboard');
-              this.router.navigate(['/collector']);
-              break;
-            case 'ADMIN':
-              console.log('Redirecting to admin dashboard');
-              this.router.navigate(['/admin']);
-              break;
-            default:
-              console.log('Unknown user type:', user.userType);
-              this.router.navigate(['/']);
-          }
-        })
-      ),
+  loginSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.loginSuccess),
+      tap(({ user }) => {
+        switch (user.userType) {
+          case 'HOUSEHOLD':
+            this.router.navigate(['/household']);
+            break;
+          case 'COLLECTOR':
+            this.router.navigate(['/collector']);
+            break;
+          case 'ADMIN':
+            this.router.navigate(['/admin']);
+            break;
+          default:
+            this.router.navigate(['/auth/login']);
+        }
+      })
+    ),
     { dispatch: false }
   );
 
-  logout$ = createEffect(
-    () =>
-      this.actions$.pipe(
-        ofType(AuthActions.logout),
-        tap(() => {
-          this.authService.logout();
-          this.router.navigate(['/auth/login']);
-        })
-      ),
+  logout$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.logout),
+      tap(() => {
+        this.authService.logout();
+        this.router.navigate(['/auth/login']);
+      })
+    ),
     { dispatch: false }
   );
 
   registerHouseHold$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.registerHouseHold),
-      exhaustMap(({ request }) =>
+      mergeMap(({ request }) =>
         this.authService.registerHouseHold(request).pipe(
           map(() => AuthActions.registerHouseHoldSuccess()),
           catchError(error => of(AuthActions.registerHouseHoldFailure({ error: error.message })))
         )
       )
     )
-  );
-
-  registerSuccess$ = createEffect(
-    () =>
-      this.actions$.pipe(
-        ofType(AuthActions.registerHouseHoldSuccess),
-        tap(() => {
-          this.router.navigate(['/auth/login']);
-        })
-      ),
-    { dispatch: false }
   );
 }
