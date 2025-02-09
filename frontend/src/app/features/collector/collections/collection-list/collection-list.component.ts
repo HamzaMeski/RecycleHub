@@ -338,12 +338,14 @@ export class CollectorCollectionListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.collectionService.updateRequestStatus(collection.id, 'VALIDATED').pipe(
-          mergeMap(() => this.collectionService.completeCollection(
-            collection.id,
-            result.actualWeight,
-            result.photos
-          )),
+        // First complete the collection with weight and photos
+        this.collectionService.completeCollection(
+          collection.id,
+          result.actualWeight,
+          result.photos
+        ).pipe(
+          // Then update status to VALIDATED
+          mergeMap(() => this.collectionService.updateRequestStatus(collection.id, 'VALIDATED')),
           catchError(error => {
             this.error = 'Failed to complete collection';
             console.error('Error completing collection:', error);
