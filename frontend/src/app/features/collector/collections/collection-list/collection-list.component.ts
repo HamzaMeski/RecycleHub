@@ -17,6 +17,8 @@ import { Collection } from '@shared/types/models';
 import { CompleteCollectionDialogComponent } from '../complete-collection-dialog/complete-collection-dialog.component';
 import { catchError, mergeMap } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { Router } from '@angular/router';
+import { AuthService } from '@core/services/auth.service';
 
 @Component({
   selector: 'app-collector-collection-list',
@@ -40,7 +42,17 @@ import { of } from 'rxjs';
   template: `
     <div class="container mx-auto px-4 py-8">
       <div class="bg-white rounded-lg shadow-lg p-6">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">Collection Requests</h1>
+        <!-- Header with Logout -->
+        <div class="flex justify-between items-center mb-6">
+          <h1 class="text-2xl font-bold text-gray-800">Collection Requests</h1>
+          <button mat-raised-button 
+                  color="warn" 
+                  (click)="logout()"
+                  class="flex items-center gap-2">
+            <mat-icon>logout</mat-icon>
+            Logout
+          </button>
+        </div>
 
         <!-- Error Message -->
         <div *ngIf="error" class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
@@ -103,7 +115,7 @@ import { of } from 'rxjs';
                   <!-- Weight Column -->
                   <ng-container matColumnDef="weight">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>Est. Weight</th>
-                    <td mat-cell *matCellDef="let collection">{{ collection.weightInGrams }} g</td>
+                    <td mat-cell *matCellDef="let collection">{{ collection.weightInGrams / 1000 }} kg</td>
                   </ng-container>
 
                   <!-- Waste Types Column -->
@@ -159,7 +171,25 @@ import { of } from 'rxjs';
                   <!-- Weight Column -->
                   <ng-container matColumnDef="weight">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>Est. Weight</th>
-                    <td mat-cell *matCellDef="let collection">{{ collection.weightInGrams }} g</td>
+                    <td mat-cell *matCellDef="let collection">
+                      <div>Est: {{ collection.weightInGrams / 1000 }} kg</div>
+                      <div *ngIf="collection.actualWeightInGrams !== undefined && collection.actualWeightInGrams !== null" class="text-green-600 text-sm">
+                        Actual: {{ collection.actualWeightInGrams / 1000 }} kg
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <!-- Actual Weight Column -->
+                  <ng-container matColumnDef="actualWeight">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Actual Weight</th>
+                    <td mat-cell *matCellDef="let collection">
+                      <span *ngIf="collection.actualWeightInGrams !== undefined && collection.actualWeightInGrams !== null" class="text-green-600">
+                        {{ collection.actualWeightInGrams / 1000 }} kg
+                      </span>
+                      <span *ngIf="collection.actualWeightInGrams === undefined || collection.actualWeightInGrams === null" class="text-gray-400">
+                        Not measured
+                      </span>
+                    </td>
                   </ng-container>
 
                   <!-- Status Column -->
@@ -199,8 +229,8 @@ import { of } from 'rxjs';
                     </td>
                   </ng-container>
 
-                  <tr mat-header-row *matHeaderRowDef="myColumns"></tr>
-                  <tr mat-row *matRowDef="let row; columns: myColumns;"></tr>
+                  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
                 </table>
 
                 <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
@@ -222,11 +252,13 @@ export class CollectorCollectionListComponent implements OnInit {
 
   // Table columns
   availableColumns = ['id', 'address', 'weight', 'wasteTypes', 'actions'];
-  myColumns = ['id', 'address', 'weight', 'status', 'wasteTypes', 'actions'];
+  displayedColumns = ['id', 'address', 'weight', 'actualWeight', 'wasteTypes', 'status', 'actions'];
 
   constructor(
     private collectionService: CollectionService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -264,6 +296,7 @@ export class CollectorCollectionListComponent implements OnInit {
         return of([]);
       })
     ).subscribe(collections => {
+      console.log('Loaded collections:', collections); // Debug log
       this.myCollections = collections;
     });
   }
@@ -338,25 +371,37 @@ export class CollectorCollectionListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        // First complete the collection with weight and photos
+        console.log('List - Complete request:', {
+          collectionId: collection.id,
+          dialogResult: result
+        });
         this.collectionService.completeCollection(
           collection.id,
-          result.actualWeight,
+          result.actualWeight,  // Now using actualWeight from dialog
           result.photos
         ).pipe(
-          // Then update status to VALIDATED
-          mergeMap(() => this.collectionService.updateRequestStatus(collection.id, 'VALIDATED')),
           catchError(error => {
-            this.error = 'Failed to complete collection';
-            console.error('Error completing collection:', error);
+            const errorMessage = error.error?.message || error.message || 'Unknown error';
+            this.error = `Error completing collection: ${errorMessage}`;
+            console.error('List - Complete error:', {
+              error,
+              collection,
+              dialogResult: result
+            });
             return of(null);
           })
         ).subscribe(response => {
           if (response) {
+            console.log('List - Complete success:', response);
             this.loadMyCollections();
           }
         });
       }
     });
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

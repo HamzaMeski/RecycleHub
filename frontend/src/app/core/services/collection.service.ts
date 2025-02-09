@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, catchError } from 'rxjs';
 import { Collection } from '@shared/types/models';
 import { environment } from '@env/environment';
+import { tap } from 'rxjs/operators';
 
 export interface CompleteCollectionDTO {
-  actualWeight: number;
+  actualWeight: number;  // Weight in grams
   photos: string[];
 }
 
@@ -28,7 +29,10 @@ export class CollectionService {
   }
 
   getCollectorRequests(): Observable<Collection[]> {
-    return this.http.get<Collection[]>(`${this.apiUrl}/collector`);
+    console.log('Getting collector requests...'); 
+    return this.http.get<Collection[]>(`${this.apiUrl}/collector`).pipe(
+      tap(response => console.log('Collector requests response:', response)) 
+    );
   }
 
   updateRequestStatus(requestId: number, status: 'PENDING' | 'OCCUPIED' | 'IN_PROGRESS' | 'VALIDATED' | 'REJECTED'): Observable<Collection> {
@@ -39,10 +43,26 @@ export class CollectionService {
 
   completeCollection(requestId: number, actualWeight: number, photos: string[]): Observable<Collection> {
     const completeRequest: CompleteCollectionDTO = {
-      actualWeight,
+      actualWeight,  // Already in grams from dialog
       photos
     };
-    return this.http.put<Collection>(`${this.apiUrl}/${requestId}/complete`, completeRequest);
+    console.log('Service - Complete request:', {
+      requestId,
+      actualWeight,
+      photosCount: photos.length,
+      request: completeRequest
+    });
+    return this.http.put<Collection>(`${this.apiUrl}/${requestId}/complete`, completeRequest).pipe(
+      tap(response => console.log('Service - Complete response:', response)),
+      catchError(error => {
+        console.error('Service - Complete error:', {
+          error,
+          request: completeRequest,
+          response: error.error
+        });
+        throw error;
+      })
+    );
   }
 
   // Household endpoints

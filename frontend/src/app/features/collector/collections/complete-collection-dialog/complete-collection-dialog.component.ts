@@ -25,9 +25,9 @@ import { Collection } from '@shared/types/models';
       <form [formGroup]="completeForm" (ngSubmit)="onSubmit()">
         <!-- Actual Weight -->
         <mat-form-field class="w-full mb-4">
-          <mat-label>Actual Weight (grams)</mat-label>
+          <mat-label>Actual Weight (kg)</mat-label>
           <input matInput type="number" formControlName="actualWeight" placeholder="Enter actual weight">
-          <mat-hint>Estimated weight was {{ data.weightInGrams }} grams</mat-hint>
+          <mat-hint>Estimated weight was {{ data.weightInGrams / 1000 }} kg</mat-hint>
           <mat-error *ngIf="completeForm.get('actualWeight')?.hasError('required')">
             Actual weight is required
           </mat-error>
@@ -109,8 +109,15 @@ export class CompleteCollectionDialogComponent {
 
   onSubmit(): void {
     if (this.completeForm.valid && this.photos.length > 0) {
+      const weightInKg = this.completeForm.value.actualWeight;
+      const weightInGrams = Math.round(weightInKg * 1000); // Convert to grams and round to whole number
+      console.log('Dialog - Weight conversion:', {
+        originalWeight: weightInKg,
+        convertedWeight: weightInGrams,
+        photos: this.photos.length
+      });
       const result = {
-        actualWeight: this.completeForm.value.actualWeight / 1000, // Convert to kg for backend
+        actualWeight: weightInGrams,  // Backend expects actualWeight in grams
         photos: this.photos
       };
       this.dialogRef.close(result);

@@ -12,6 +12,7 @@ export interface Collection extends CollectionRequestDTO {
   id: number;
   status: string;
   points?: number;
+  actualWeightInGrams?: number;
   createdAt: string;
   updatedAt: string;
   householdId: number;

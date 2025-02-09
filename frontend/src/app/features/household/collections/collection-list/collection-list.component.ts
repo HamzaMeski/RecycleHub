@@ -3,25 +3,53 @@ import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatTableModule } from '@angular/material/table';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
 import { CollectionService } from '@core/services/collection.service';
 import { Collection } from '@shared/types/models';
 import { NewCollectionDialogComponent } from '../new-collection-dialog/new-collection-dialog.component';
 import { catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { Router } from '@angular/router';
+import { AuthService } from '@core/services/auth.service';
 
 @Component({
   selector: 'app-collection-list',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatDialogModule],
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTableModule,
+    MatChipsModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatDialogModule
+  ],
   template: `
     <div class="container mx-auto px-4 py-8">
       <div class="bg-white rounded-lg shadow-lg p-6">
+        <!-- Header with Create and Logout -->
         <div class="flex justify-between items-center mb-6">
           <h1 class="text-2xl font-bold text-gray-800">My Collections</h1>
-          <button mat-raised-button color="primary" (click)="openNewCollectionDialog()">
-            <mat-icon>add</mat-icon>
-            New Collection
-          </button>
+          <div class="flex gap-4">
+            <button mat-raised-button 
+                    color="primary" 
+                    (click)="openNewCollectionDialog()"
+                    class="flex items-center gap-2">
+              <mat-icon>add</mat-icon>
+              New Collection
+            </button>
+            <button mat-raised-button 
+                    color="warn" 
+                    (click)="logout()"
+                    class="flex items-center gap-2">
+              <mat-icon>logout</mat-icon>
+              Logout
+            </button>
+          </div>
         </div>
 
         <!-- Error Message -->
@@ -69,7 +97,9 @@ export class CollectionListComponent implements OnInit {
 
   constructor(
     private collectionService: CollectionService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private router: Router,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -77,14 +107,14 @@ export class CollectionListComponent implements OnInit {
   }
 
   loadCollections(): void {
-    this.collectionService.getHouseholdRequests().subscribe({
-      next: (collections: Collection[]) => {
-        this.collections = collections;
-      },
-      error: (error: Error) => {
+    this.collectionService.getHouseholdRequests().pipe(
+      catchError(error => {
         this.error = 'Failed to load collections';
         console.error('Error loading collections:', error);
-      }
+        return of([]);
+      })
+    ).subscribe(collections => {
+      this.collections = collections;
     });
   }
 
@@ -95,17 +125,7 @@ export class CollectionListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.collectionService.createRequest(result).pipe(
-          catchError(error => {
-            this.error = 'Failed to create collection';
-            console.error('Error creating collection:', error);
-            return of(null);
-          })
-        ).subscribe(response => {
-          if (response) {
-            this.loadCollections();
-          }
-        });
+        this.loadCollections();
       }
     });
   }
@@ -118,23 +138,13 @@ export class CollectionListComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.collectionService.updateRequest(collection.id, result).pipe(
-          catchError(error => {
-            this.error = 'Failed to update collection';
-            console.error('Error updating collection:', error);
-            return of(null);
-          })
-        ).subscribe(response => {
-          if (response) {
-            this.loadCollections();
-          }
-        });
+        this.loadCollections();
       }
     });
   }
 
   deleteCollection(id: number): void {
-    if (confirm('Are you sure you want to delete this collection request?')) {
+    if (confirm('Are you sure you want to delete this collection?')) {
       this.collectionService.deleteRequest(id).pipe(
         catchError(error => {
           this.error = 'Failed to delete collection';
@@ -145,5 +155,10 @@ export class CollectionListComponent implements OnInit {
         this.loadCollections();
       });
     }
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

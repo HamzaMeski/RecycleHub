@@ -1,11 +1,16 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { AuthService } from '@core/services/auth.service';
+import { Store } from '@ngrx/store';
+import { logout } from '@store/actions/auth.actions';
 
 @Component({
   selector: 'app-household-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, MatButtonModule, MatIconModule],
   template: `
     <div class="min-h-screen bg-gray-100">
       <!-- Sidebar -->
@@ -16,8 +21,8 @@ import { RouterModule } from '@angular/router';
         </div>
 
         <!-- Navigation Links -->
-        <nav class="mt-6">
-          <div class="px-4 space-y-2">
+        <nav class="flex flex-col h-[calc(100%-4rem)] justify-between">
+          <div class="px-4 space-y-2 mt-6">
             <a routerLink="/household/dashboard" 
                routerLinkActive="bg-green-500 text-white"
                [routerLinkActiveOptions]="{exact: true}"
@@ -65,40 +70,37 @@ import { RouterModule } from '@angular/router';
               Profile
             </a>
           </div>
+
+          <!-- Logout Button at Bottom -->
+          <div class="px-4 mb-6">
+            <button (click)="logout()" 
+                    class="flex items-center w-full px-4 py-2.5 text-gray-700 rounded-lg hover:bg-red-500 hover:text-white transition-all duration-200">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Logout
+            </button>
+          </div>
         </nav>
       </aside>
 
       <!-- Main Content -->
       <div class="ml-64">
-        <!-- Top Navigation -->
-        <nav class="bg-white shadow-sm">
-          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-              <div class="flex items-center">
-                <h1 class="text-xl font-semibold text-gray-800">Household Dashboard</h1>
-              </div>
-              <div class="flex items-center">
-                <button class="p-2 rounded-full hover:bg-gray-100">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                </button>
-                <button class="ml-4 p-2 rounded-full hover:bg-gray-100">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </nav>
-
         <!-- Page Content -->
-        <main class="p-8">
+        <main class="p-6">
           <router-outlet></router-outlet>
         </main>
       </div>
     </div>
   `
 })
-export class HouseholdDashboardComponent {}
+export class HouseholdDashboardComponent {
+  constructor(
+    private authService: AuthService,
+    private store: Store
+  ) {}
+
+  logout() {
+    this.store.dispatch(logout());
+  }
+}
