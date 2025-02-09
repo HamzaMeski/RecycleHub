@@ -1,5 +1,5 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { CollectionState } from '@shared/models/collection.types';
+import { CollectionState } from '@shared/types/interfaces';
 
 export const selectCollectionState = createFeatureSelector<CollectionState>('collection');
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import {AuthRequest, AuthResponse, HouseHoldRegisterRequest} from '@shared/models/auth.models';
+import {AuthRequest, AuthResponse, HouseHoldRegisterRequest} from '@shared/types/models';
 
 @Injectable({
   providedIn: 'root'

@@ -1,5 +1,5 @@
 import { createReducer, on } from '@ngrx/store';
-import { CollectionState } from '@shared/models/collection.types';
+import { CollectionState } from '@shared/types/interfaces';
 import * as CollectionActions from '../actions/collection.actions';
 
 export const initialState: CollectionState = {
