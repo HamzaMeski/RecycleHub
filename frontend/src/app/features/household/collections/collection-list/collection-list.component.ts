@@ -5,12 +5,15 @@ import { CollectionService } from '@core/services/collection.service';
 import { Collection } from '@shared/types/models';
 import { CollectionStatus } from '@shared/types/enums';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { CollectionDialogComponent } from '../collection-dialog/collection-dialog.component';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-collection-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatDialogModule],
+  imports: [CommonModule, RouterLink, MatDialogModule, MatButtonModule, MatIconModule],
   template: `
     <div class="container mx-auto px-4 py-8">
       <div class="flex justify-between items-center mb-6">
@@ -84,27 +87,33 @@ import { CollectionDialogComponent } from '../collection-dialog/collection-dialo
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ collection.points || 'N/A' }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="flex gap-2">
                   <button
                     *ngIf="collection.status === CollectionStatus.PENDING"
+                    mat-icon-button
+                    color="primary"
                     (click)="editCollection(collection)"
-                    class="text-blue-600 hover:text-blue-800"
+                    matTooltip="Edit Collection"
                   >
-                    Edit
+                    <mat-icon>edit</mat-icon>
                   </button>
                   <button
                     *ngIf="collection.status === CollectionStatus.PENDING"
+                    mat-icon-button
+                    color="warn"
                     (click)="cancelCollection(collection.id)"
-                    class="text-red-600 hover:text-red-800"
+                    matTooltip="Cancel Collection"
                   >
-                    Cancel
+                    <mat-icon>delete</mat-icon>
                   </button>
                   <button
+                    mat-icon-button
+                    color="accent"
                     (click)="viewCollection(collection)"
-                    class="text-green-600 hover:text-green-800"
+                    matTooltip="View Details"
                   >
-                    View
+                    <mat-icon>visibility</mat-icon>
                   </button>
                 </div>
               </td>
@@ -198,7 +207,7 @@ export class CollectionListComponent implements OnInit {
       width: '600px',
       data: {
         type: 'edit',
-        collection: { ...collection } // Create a copy to avoid direct mutations
+        collection: { ...collection }
       }
     });
 
@@ -224,19 +233,32 @@ export class CollectionListComponent implements OnInit {
   }
 
   cancelCollection(id: number) {
-    if (confirm('Are you sure you want to cancel this collection request?')) {
-      this.loading = true;
-      this.collectionService.cancelCollection(id).subscribe({
-        next: () => {
-          this.collections = this.collections.filter(c => c.id !== id);
-          this.filterByStatus(this.selectedStatus);
-          this.loading = false;
-        },
-        error: (err) => {
-          this.error = err.message || 'Failed to cancel collection';
-          this.loading = false;
-        }
-      });
-    }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Cancel Collection',
+        message: 'Are you sure you want to cancel this collection request? This action cannot be undone.',
+        confirmText: 'Cancel Collection',
+        cancelText: 'Keep Collection',
+        isDestructive: true
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.loading = true;
+        this.collectionService.cancelCollection(id).subscribe({
+          next: () => {
+            this.collections = this.collections.filter(c => c.id !== id);
+            this.filterByStatus(this.selectedStatus);
+            this.loading = false;
+          },
+          error: (err) => {
+            this.error = err.message || 'Failed to cancel collection';
+            this.loading = false;
+          }
+        });
+      }
+    });
   }
 }
