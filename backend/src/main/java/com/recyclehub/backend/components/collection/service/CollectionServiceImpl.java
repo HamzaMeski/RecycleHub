@@ -99,8 +99,10 @@ public class CollectionServiceImpl implements CollectionService {
         request.setNotes(requestDTO.getNotes());
         request.setEstimatedWeight(requestDTO.getWeightInGrams() / 1000.0);
 
-        // Update waste items
-        request.getWasteItems().clear();
+        // Clear and update waste items
+        List<WasteItem> existingItems = request.getWasteItems();
+        existingItems.clear();
+        
         List<WasteItem> newWasteItems = requestDTO.getWasteTypes().stream()
                 .map(type -> WasteItem.builder()
                         .request(request)
@@ -109,11 +111,13 @@ public class CollectionServiceImpl implements CollectionService {
                         .pointsPerKg(type.getPointsPerKg())
                         .build())
                 .collect(Collectors.toList());
-        request.setWasteItems(newWasteItems);
+        existingItems.addAll(newWasteItems);
 
-        // Update photos
+        // Update photos if provided
         if (requestDTO.getPhotos() != null) {
-            request.getPhotos().removeIf(photo -> !photo.getIsCollectorPhoto());
+            List<RequestPhoto> existingPhotos = request.getPhotos();
+            existingPhotos.removeIf(photo -> !photo.getIsCollectorPhoto());
+            
             List<RequestPhoto> newPhotos = requestDTO.getPhotos().stream()
                     .map(url -> RequestPhoto.builder()
                             .request(request)
@@ -122,7 +126,7 @@ public class CollectionServiceImpl implements CollectionService {
                             .uploadedAt(LocalDateTime.now())
                             .build())
                     .collect(Collectors.toList());
-            request.getPhotos().addAll(newPhotos);
+            existingPhotos.addAll(newPhotos);
         }
 
         request.setUpdatedAt(LocalDateTime.now());

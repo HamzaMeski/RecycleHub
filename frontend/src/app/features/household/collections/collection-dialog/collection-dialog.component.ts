@@ -50,7 +50,7 @@ interface DialogData {
             </div>
             <div>
               <p class="text-sm text-gray-500">Weight</p>
-              <p class="font-medium">{{ data.collection.weightInGrams / 1000 }} kg</p>
+              <p class="font-medium">{{ data.collection.weightInGrams }} g</p>
             </div>
             <div>
               <p class="text-sm text-gray-500">Points</p>
@@ -77,45 +77,89 @@ interface DialogData {
         <!-- Edit Mode -->
         <form *ngIf="data.type === 'edit'" [formGroup]="editForm" class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
+            <!-- Waste Types -->
             <div class="col-span-2">
-              <mat-form-field class="w-full">
-                <mat-label>Collection Address</mat-label>
-                <input matInput formControlName="collectionAddress" />
-              </mat-form-field>
-            </div>
-
-            <div>
-              <mat-form-field class="w-full">
-                <mat-label>City</mat-label>
-                <input matInput formControlName="city" />
-              </mat-form-field>
-            </div>
-
-            <div>
-              <mat-form-field class="w-full">
-                <mat-label>Weight (kg)</mat-label>
-                <input matInput type="number" formControlName="weightInGrams" />
-              </mat-form-field>
-            </div>
-
-            <div class="col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Waste Types</label>
-              <div class="grid grid-cols-3 gap-2">
-                <mat-checkbox
-                  *ngFor="let type of wasteTypes"
-                  [checked]="isWasteTypeSelected(type)"
-                  (change)="onWasteTypeChange($event, type)"
-                  color="primary"
-                >
-                  {{ type }}
-                </mat-checkbox>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Waste Types*
+              </label>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div *ngFor="let type of wasteTypes" class="flex items-center">
+                  <mat-checkbox
+                    [checked]="isWasteTypeSelected(type.value)"
+                    (change)="onWasteTypeChange($event, type.value)"
+                    color="primary"
+                  >
+                    {{ type.label }}
+                  </mat-checkbox>
+                </div>
               </div>
+              <p *ngIf="showWasteTypeError" class="mt-1 text-sm text-red-600">
+                Please select at least one waste type
+              </p>
             </div>
 
+            <!-- Weight -->
+            <div class="col-span-2">
+              <mat-form-field class="w-full">
+                <mat-label>Weight (in grams)*</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  formControlName="weightInGrams"
+                  placeholder="Enter weight in grams"
+                />
+                <mat-error *ngIf="editForm.get('weightInGrams')?.errors?.['required']">
+                  Weight is required
+                </mat-error>
+                <mat-error *ngIf="editForm.get('weightInGrams')?.errors?.['min']">
+                  Weight must be at least 1000 grams
+                </mat-error>
+                <mat-error *ngIf="editForm.get('weightInGrams')?.errors?.['max']">
+                  Weight cannot exceed 10000 grams (10 kg)
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <!-- Collection Address -->
+            <div class="col-span-2">
+              <mat-form-field class="w-full">
+                <mat-label>Collection Address*</mat-label>
+                <input
+                  matInput
+                  formControlName="collectionAddress"
+                  placeholder="Enter collection address"
+                />
+                <mat-error *ngIf="editForm.get('collectionAddress')?.errors?.['required']">
+                  Collection address is required
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <!-- City -->
+            <div class="col-span-2">
+              <mat-form-field class="w-full">
+                <mat-label>City*</mat-label>
+                <input
+                  matInput
+                  formControlName="city"
+                  placeholder="Enter city"
+                />
+                <mat-error *ngIf="editForm.get('city')?.errors?.['required']">
+                  City is required
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <!-- Notes -->
             <div class="col-span-2">
               <mat-form-field class="w-full">
                 <mat-label>Notes</mat-label>
-                <textarea matInput formControlName="notes" rows="3"></textarea>
+                <textarea
+                  matInput
+                  formControlName="notes"
+                  rows="3"
+                  placeholder="Add any additional notes"
+                ></textarea>
               </mat-form-field>
             </div>
           </div>
@@ -135,7 +179,7 @@ interface DialogData {
           mat-raised-button
           color="primary"
           (click)="onSave()"
-          [disabled]="!editForm.valid"
+          [disabled]="!isValid()"
           class="bg-green-600 text-white"
         >
           Save Changes
@@ -146,7 +190,14 @@ interface DialogData {
 })
 export class CollectionDialogComponent {
   editForm!: FormGroup;
-  wasteTypes = Object.values(WasteType);
+  showWasteTypeError = false;
+  selectedWasteTypes: WasteType[] = [];
+  wasteTypes = [
+    { value: WasteType.PLASTIC, label: 'Plastic' },
+    { value: WasteType.PAPER, label: 'Paper' },
+    { value: WasteType.GLASS, label: 'Glass' },
+    { value: WasteType.METAL, label: 'Metal' }
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -154,21 +205,22 @@ export class CollectionDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: DialogData
   ) {
     if (data.type === 'edit') {
+      this.selectedWasteTypes = [...data.collection.wasteTypes];
       this.editForm = this.fb.group({
+        weightInGrams: [data.collection.weightInGrams, [Validators.required, Validators.min(1000), Validators.max(10000)]],
         collectionAddress: [data.collection.collectionAddress, Validators.required],
         city: [data.collection.city, Validators.required],
-        weightInGrams: [data.collection.weightInGrams / 1000, [Validators.required, Validators.min(0.1)]],
         notes: [data.collection.notes]
       });
     }
   }
 
   isWasteTypeSelected(type: string): boolean {
-    return this.data.collection.wasteTypes.includes(type as WasteType);
+    return this.selectedWasteTypes.includes(type as WasteType);
   }
 
   onWasteTypeChange(event: MatCheckboxChange, type: string): void {
-    const currentTypes = new Set(this.data.collection.wasteTypes);
+    const currentTypes = new Set(this.selectedWasteTypes);
 
     if (event.checked) {
       currentTypes.add(type as WasteType);
@@ -176,7 +228,12 @@ export class CollectionDialogComponent {
       currentTypes.delete(type as WasteType);
     }
 
-    this.data.collection.wasteTypes = Array.from(currentTypes);
+    this.selectedWasteTypes = Array.from(currentTypes);
+    this.showWasteTypeError = false;
+  }
+
+  isValid(): boolean {
+    return this.editForm.valid && this.selectedWasteTypes.length > 0;
   }
 
   onCancel(): void {
@@ -184,12 +241,16 @@ export class CollectionDialogComponent {
   }
 
   onSave(): void {
-    if (this.editForm.valid) {
+    if (this.isValid()) {
+      if (this.selectedWasteTypes.length === 0) {
+        this.showWasteTypeError = true;
+        return;
+      }
+
       const formValue = this.editForm.value;
-      const updatedCollection: Partial<Collection> = {
+      const updatedCollection = {
         ...formValue,
-        weightInGrams: Math.round(formValue.weightInGrams * 1000), // Convert kg to grams
-        wasteTypes: this.data.collection.wasteTypes
+        wasteTypes: this.selectedWasteTypes
       };
       this.dialogRef.close(updatedCollection);
     }
