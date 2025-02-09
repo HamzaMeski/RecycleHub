@@ -48,7 +48,7 @@ public class CollectionServiceImpl implements CollectionService {
                 .city(requestDTO.getCity())
                 .notes(requestDTO.getNotes())
                 .status(RequestStatus.PENDING)
-                .estimatedWeight(requestDTO.getWeightInGrams() / 1000.0) // Convert to kg
+                .estimatedWeight(requestDTO.getWeightInGrams()) // Store as grams
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -57,7 +57,7 @@ public class CollectionServiceImpl implements CollectionService {
                 .map(type -> WasteItem.builder()
                         .request(request)
                         .type(type)
-                        .weight(requestDTO.getWeightInGrams() / (1000.0 * requestDTO.getWasteTypes().size())) // Distribute weight evenly
+                        .weight(requestDTO.getWeightInGrams() / (double) requestDTO.getWasteTypes().size()) // Distribute weight evenly
                         .pointsPerKg(type.getPointsPerKg())
                         .build())
                 .collect(Collectors.toList());
@@ -97,7 +97,7 @@ public class CollectionServiceImpl implements CollectionService {
         request.setStreet(requestDTO.getCollectionAddress());
         request.setCity(requestDTO.getCity());
         request.setNotes(requestDTO.getNotes());
-        request.setEstimatedWeight(requestDTO.getWeightInGrams() / 1000.0);
+        request.setEstimatedWeight(requestDTO.getWeightInGrams()); // Store as grams
 
         // Clear and update waste items
         List<WasteItem> existingItems = request.getWasteItems();
@@ -107,7 +107,7 @@ public class CollectionServiceImpl implements CollectionService {
                 .map(type -> WasteItem.builder()
                         .request(request)
                         .type(type)
-                        .weight(requestDTO.getWeightInGrams() / (1000.0 * requestDTO.getWasteTypes().size()))
+                        .weight(requestDTO.getWeightInGrams() / (double) requestDTO.getWasteTypes().size())
                         .pointsPerKg(type.getPointsPerKg())
                         .build())
                 .collect(Collectors.toList());
@@ -189,7 +189,7 @@ public class CollectionServiceImpl implements CollectionService {
             throw new ValidationException("Request must be in progress to complete collection");
         }
 
-        request.setActualWeight(actualWeight / 1000.0); // Convert to kg
+        request.setActualWeight(actualWeight); // Store as grams
         
         // Add collector photos
         if (photos != null && !photos.isEmpty()) {
@@ -237,8 +237,8 @@ public class CollectionServiceImpl implements CollectionService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CollectionRequestDTO> getAvailableRequestsInCity(String city) {
-        return collectionRepository.findAvailableRequestsInCity(city)
+    public List<CollectionRequestDTO> getAvailableRequests(String city, String country) {
+        return collectionRepository.findAllAvailableRequests()
                 .stream()
                 .map(collectionMapper::toDTO)
                 .toList();
@@ -260,6 +260,15 @@ public class CollectionServiceImpl implements CollectionService {
                 collectionRepository.findById(requestId)
                         .orElseThrow(() -> new ResourceNotFoundException("Collection request not found"))
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CollectionRequestDTO> getAllAvailableRequests() {
+        return collectionRepository.findAllAvailableRequests()
+                .stream()
+                .map(collectionMapper::toDTO)
+                .toList();
     }
 
     @Override

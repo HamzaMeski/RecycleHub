@@ -57,8 +57,8 @@ public class CollectionController {
     // Collector endpoints
     @GetMapping("/available")
     @PreAuthorize("hasRole('ROLE_COLLECTOR')")
-    public ResponseEntity<List<CollectionRequestDTO>> getAvailableRequests(@RequestParam String city) {
-        return ResponseEntity.ok(collectionService.getAvailableRequestsInCity(city));
+    public ResponseEntity<List<CollectionRequestDTO>> getAvailableRequests() {
+        return ResponseEntity.ok(collectionService.getAllAvailableRequests());
     }
 
     @PutMapping("/{requestId}/status")
