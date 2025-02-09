@@ -1,14 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { CollectionService } from '@core/services/collection.service';
 import { Collection } from '@shared/types/models';
 import { CollectionStatus } from '@shared/types/enums';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { CollectionDialogComponent } from '../collection-dialog/collection-dialog.component';
 
 @Component({
   selector: 'app-collection-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, MatDialogModule],
   template: `
     <div class="container mx-auto px-4 py-8">
       <div class="flex justify-between items-center mb-6">
@@ -86,7 +88,7 @@ import { CollectionStatus } from '@shared/types/enums';
                 <div class="flex gap-2">
                   <button
                     *ngIf="collection.status === CollectionStatus.PENDING"
-                    (click)="editCollection(collection.id)"
+                    (click)="editCollection(collection)"
                     class="text-blue-600 hover:text-blue-800"
                   >
                     Edit
@@ -99,7 +101,7 @@ import { CollectionStatus } from '@shared/types/enums';
                     Cancel
                   </button>
                   <button
-                    (click)="viewDetails(collection.id)"
+                    (click)="viewCollection(collection)"
                     class="text-green-600 hover:text-green-800"
                   >
                     View
@@ -126,16 +128,20 @@ export class CollectionListComponent implements OnInit {
   selectedStatus: string = 'All';
   loading = false;
   error: string | null = null;
-  CollectionStatus = CollectionStatus; // Make enum available in template
+  CollectionStatus = CollectionStatus;
 
   collectionStatuses = ['All', ...Object.values(CollectionStatus)];
 
   constructor(
     private collectionService: CollectionService,
-    private router: Router
+    private dialog: MatDialog
   ) {}
 
   ngOnInit() {
+    this.loadCollections();
+  }
+
+  loadCollections() {
     this.loading = true;
     this.collectionService.getCollections().subscribe({
       next: (collections) => {
@@ -177,8 +183,44 @@ export class CollectionListComponent implements OnInit {
     }
   }
 
-  editCollection(id: number) {
-    this.router.navigate(['/household/collections/edit', id]);
+  viewCollection(collection: Collection) {
+    this.dialog.open(CollectionDialogComponent, {
+      width: '600px',
+      data: {
+        type: 'view',
+        collection
+      }
+    });
+  }
+
+  editCollection(collection: Collection) {
+    const dialogRef = this.dialog.open(CollectionDialogComponent, {
+      width: '600px',
+      data: {
+        type: 'edit',
+        collection: { ...collection } // Create a copy to avoid direct mutations
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loading = true;
+        this.collectionService.updateCollection(collection.id, result).subscribe({
+          next: (updatedCollection) => {
+            const index = this.collections.findIndex(c => c.id === collection.id);
+            if (index !== -1) {
+              this.collections[index] = updatedCollection;
+              this.filterByStatus(this.selectedStatus);
+            }
+            this.loading = false;
+          },
+          error: (err) => {
+            this.error = err.message || 'Failed to update collection';
+            this.loading = false;
+          }
+        });
+      }
+    });
   }
 
   cancelCollection(id: number) {
@@ -196,9 +238,5 @@ export class CollectionListComponent implements OnInit {
         }
       });
     }
-  }
-
-  viewDetails(id: number) {
-    this.router.navigate(['/household/collections/view', id]);
   }
 }
