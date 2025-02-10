@@ -7,6 +7,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { CollectionService } from '@core/services/collection.service';
 import { Collection } from '@shared/types/models';
 import { NewCollectionDialogComponent } from '../new-collection-dialog/new-collection-dialog.component';
@@ -26,30 +27,30 @@ import { AuthService } from '@core/services/auth.service';
     MatChipsModule,
     MatPaginatorModule,
     MatSortModule,
-    MatDialogModule
+    MatDialogModule,
+    MatTooltipModule
   ],
+  styles: [`
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      margin-left: 16px;
+    }
+    .action-buttons button {
+      min-width: 40px;
+      height: 40px;
+      line-height: 40px;
+    }
+    .action-buttons mat-icon {
+      font-size: 20px;
+    }
+  `],
   template: `
     <div class="container mx-auto px-4 py-8">
       <div class="bg-white rounded-lg shadow-lg p-6">
         <!-- Header with Create and Logout -->
         <div class="flex justify-between items-center mb-6">
           <h1 class="text-2xl font-bold text-gray-800">My Collections</h1>
-          <div class="flex gap-4">
-            <button mat-raised-button 
-                    color="primary" 
-                    (click)="openNewCollectionDialog()"
-                    class="flex items-center gap-2">
-              <mat-icon>add</mat-icon>
-              New Collection
-            </button>
-            <button mat-raised-button 
-                    color="warn" 
-                    (click)="logout()"
-                    class="flex items-center gap-2">
-              <mat-icon>logout</mat-icon>
-              Logout
-            </button>
-          </div>
         </div>
 
         <!-- Error Message -->
@@ -58,34 +59,89 @@ import { AuthService } from '@core/services/auth.service';
         </div>
 
         <!-- Collections List -->
-        <div *ngIf="collections.length === 0" class="text-center text-gray-500 py-8">
-          You haven't created any collection requests yet.
-        </div>
+        <div class="space-y-4">
+          <div *ngFor="let collection of collections"
+               class="p-4 bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start">
+              <div class="space-y-2">
+                <!-- Collection ID and Status -->
+                <div class="flex items-center gap-3">
+                  <h3 class="text-lg font-semibold">Collection #{{ collection.id }}</h3>
+                  <span class="px-2 py-1 text-xs rounded-full"
+                        [ngClass]="{
+                          'bg-gray-100 text-gray-800': collection.status === 'PENDING',
+                          'bg-blue-100 text-blue-800': collection.status === 'OCCUPIED',
+                          'bg-yellow-100 text-yellow-800': collection.status === 'IN_PROGRESS',
+                          'bg-green-100 text-green-800': collection.status === 'VALIDATED',
+                          'bg-red-100 text-red-800': collection.status === 'REJECTED'
+                        }">
+                    {{ collection.status }}
+                  </span>
+                </div>
 
-        <div *ngFor="let collection of collections" class="mb-4 p-4 border rounded-lg hover:shadow-md transition-shadow">
-          <div class="flex justify-between items-start">
-            <div>
-              <h3 class="text-lg font-semibold">Collection #{{ collection.id }}</h3>
-              <p class="text-gray-600">Address: {{ collection.collectionAddress }}</p>
-              <p class="text-gray-600">City: {{ collection.city }}</p>
-              <p class="text-gray-600">Weight: {{ collection.weightInGrams / 1000 }} kg</p>
-              <p class="text-gray-600">Waste Types: {{ collection.wasteTypes.join(', ') }}</p>
-              <p class="text-gray-600">Status: {{ collection.status }}</p>
-              <p *ngIf="collection.notes" class="text-gray-600">Notes: {{ collection.notes }}</p>
-            </div>
-            <div class="space-x-2">
-              <button *ngIf="collection.status === 'PENDING'"
-                      mat-icon-button color="primary"
-                      (click)="editCollection(collection)">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button *ngIf="collection.status === 'PENDING'"
-                      mat-icon-button color="warn"
-                      (click)="deleteCollection(collection.id)">
-                <mat-icon>delete</mat-icon>
-              </button>
+                <!-- Collection Details -->
+                <div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                  <div>
+                    <p class="font-medium">Address:</p>
+                    <p>{{ collection.collectionAddress }}</p>
+                    <p>{{ collection.city }}</p>
+                  </div>
+                  <div>
+                    <p class="font-medium">Weight:</p>
+                    <p>{{ collection.weightInGrams / 1000 }} kg</p>
+                  </div>
+                </div>
+
+                <!-- Waste Types -->
+                <div class="flex flex-wrap gap-2 mt-2">
+                  <span *ngFor="let type of collection.wasteTypes"
+                        class="px-3 py-1 text-xs rounded-full"
+                        [ngClass]="{
+                          'bg-blue-100 text-blue-800': type === 'PLASTIC',
+                          'bg-green-100 text-green-800': type === 'PAPER',
+                          'bg-purple-100 text-purple-800': type === 'GLASS',
+                          'bg-yellow-100 text-yellow-800': type === 'METAL'
+                        }">
+                    {{ type }}
+                  </span>
+                </div>
+
+                <!-- Notes if any -->
+                <p *ngIf="collection.notes" class="text-sm text-gray-500 mt-2">
+                  <span class="font-medium">Notes:</span> {{ collection.notes }}
+                </p>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="action-buttons">
+                <button mat-mini-fab
+                        color="primary"
+                        matTooltip="Edit Collection"
+                        *ngIf="collection.status.toUpperCase() === 'PENDING'"
+                        (click)="editCollection(collection)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-mini-fab
+                        color="accent"
+                        matTooltip="View Details"
+                        (click)="viewCollection(collection)">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+                <button mat-mini-fab
+                        color="warn"
+                        matTooltip="Delete Collection"
+                        *ngIf="collection.status.toUpperCase() === 'PENDING'"
+                        (click)="deleteCollection(collection.id)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
             </div>
           </div>
+        </div>
+
+        <!-- No Collections Message -->
+        <div *ngIf="collections.length === 0" class="text-center text-gray-500 py-8">
+          You haven't created any collection requests yet.
         </div>
       </div>
     </div>
@@ -94,6 +150,7 @@ import { AuthService } from '@core/services/auth.service';
 export class CollectionListComponent implements OnInit {
   collections: Collection[] = [];
   error: string | null = null;
+  displayedColumns = ['id', 'address', 'weight', 'wasteTypes', 'status', 'actions'];
 
   constructor(
     private collectionService: CollectionService,
@@ -141,6 +198,10 @@ export class CollectionListComponent implements OnInit {
         this.loadCollections();
       }
     });
+  }
+
+  viewCollection(collection: Collection): void {
+    // TO DO: implement view collection functionality
   }
 
   deleteCollection(id: number): void {

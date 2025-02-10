@@ -45,13 +45,6 @@ import { AuthService } from '@core/services/auth.service';
         <!-- Header with Logout -->
         <div class="flex justify-between items-center mb-6">
           <h1 class="text-2xl font-bold text-gray-800">Collection Requests</h1>
-          <button mat-raised-button 
-                  color="warn" 
-                  (click)="logout()"
-                  class="flex items-center gap-2">
-            <mat-icon>logout</mat-icon>
-            Logout
-          </button>
         </div>
 
         <!-- Error Message -->
@@ -173,9 +166,6 @@ import { AuthService } from '@core/services/auth.service';
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>Est. Weight</th>
                     <td mat-cell *matCellDef="let collection">
                       <div>Est: {{ collection.weightInGrams / 1000 }} kg</div>
-                      <div *ngIf="collection.actualWeightInGrams !== undefined && collection.actualWeightInGrams !== null" class="text-green-600 text-sm">
-                        Actual: {{ collection.actualWeightInGrams / 1000 }} kg
-                      </div>
                     </td>
                   </ng-container>
 
@@ -303,7 +293,7 @@ export class CollectorCollectionListComponent implements OnInit {
 
   applyFilter(): void {
     this.filteredCollections = this.availableCollections.filter(collection => {
-      const cityMatch = !this.cityFilter || 
+      const cityMatch = !this.cityFilter ||
         collection.city.toLowerCase().includes(this.cityFilter.toLowerCase());
       return cityMatch;
     });

@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
 import { Collection } from '@shared/types/models';
+import { CollectionService } from '@core/services/collection.service';
 
 @Component({
   selector: 'app-new-collection-dialog',
@@ -65,8 +66,6 @@ import { Collection } from '@shared/types/models';
             <mat-option value="PAPER">Paper</mat-option>
             <mat-option value="GLASS">Glass</mat-option>
             <mat-option value="METAL">Metal</mat-option>
-            <mat-option value="ELECTRONICS">Electronics</mat-option>
-            <mat-option value="ORGANIC">Organic</mat-option>
           </mat-select>
           <mat-error *ngIf="collectionForm.get('wasteTypes')?.hasError('required')">
             Please select at least one waste type
@@ -97,7 +96,8 @@ export class NewCollectionDialogComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<NewCollectionDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) private data: Collection | null
+    @Inject(MAT_DIALOG_DATA) private data: Collection | null,
+    private collectionService: CollectionService
   ) {
     this.collectionForm = this.fb.group({
       collectionAddress: ['', Validators.required],
@@ -110,8 +110,11 @@ export class NewCollectionDialogComponent implements OnInit {
     if (data) {
       this.isEdit = true;
       this.collectionForm.patchValue({
-        ...data,
-        weightInGrams: data.weightInGrams / 1000 // Convert to kg for display
+        collectionAddress: data.collectionAddress,
+        city: data.city,
+        weightInGrams: data.weightInGrams / 1000, // Convert to kg for display
+        wasteTypes: data.wasteTypes,
+        notes: data.notes
       });
     }
   }
@@ -121,11 +124,36 @@ export class NewCollectionDialogComponent implements OnInit {
   onSubmit(): void {
     if (this.collectionForm.valid) {
       const formValue = this.collectionForm.value;
-      const result = {
+      const request = {
         ...formValue,
-        weightInGrams: formValue.weightInGrams * 1000 // Convert back to grams for API
+        weightInGrams: formValue.weightInGrams * 1000 // Convert kg to grams
       };
-      this.dialogRef.close(result);
+
+      if (this.isEdit && this.data) {
+        this.collectionService.updateRequest(this.data.id, request)
+          .subscribe({
+            next: (updatedCollection) => {
+              console.log('Collection updated:', updatedCollection);
+              this.dialogRef.close(true);
+            },
+            error: (error) => {
+              console.error('Error updating collection:', error);
+              // Handle error appropriately
+            }
+          });
+      } else {
+        this.collectionService.createRequest(request)
+          .subscribe({
+            next: (newCollection) => {
+              console.log('Collection created:', newCollection);
+              this.dialogRef.close(true);
+            },
+            error: (error) => {
+              console.error('Error creating collection:', error);
+              // Handle error appropriately
+            }
+          });
+      }
     }
   }
 
