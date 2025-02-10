@@ -2,10 +2,7 @@ export enum WasteType {
   PLASTIC = 'PLASTIC',
   PAPER = 'PAPER',
   GLASS = 'GLASS',
-  METAL = 'METAL',
-  ELECTRONICS = 'ELECTRONICS',
-  ORGANIC = 'ORGANIC',
-  OTHER = 'OTHER'
+  METAL = 'METAL'
 }
 
 export enum CollectionStatus {

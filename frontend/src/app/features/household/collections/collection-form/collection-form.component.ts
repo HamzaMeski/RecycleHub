@@ -53,13 +53,13 @@ import { WasteType } from '@shared/types/enums';
           <!-- Weight -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
-              Weight (in grams)*
+              Weight (in kg)*
             </label>
             <input
               type="number"
               formControlName="weightInGrams"
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-              placeholder="Enter weight in grams"
+              placeholder="Enter weight in kg"
             />
             <p *ngIf="collectionForm.get('weightInGrams')?.errors?.['required'] && collectionForm.get('weightInGrams')?.touched"
                class="mt-1 text-sm text-red-600">
@@ -67,11 +67,11 @@ import { WasteType } from '@shared/types/enums';
             </p>
             <p *ngIf="collectionForm.get('weightInGrams')?.errors?.['min'] && collectionForm.get('weightInGrams')?.touched"
                class="mt-1 text-sm text-red-600">
-              Weight must be at least 1000 grams
+              Weight must be at least 1 kg
             </p>
             <p *ngIf="collectionForm.get('weightInGrams')?.errors?.['max'] && collectionForm.get('weightInGrams')?.touched"
                class="mt-1 text-sm text-red-600">
-              Weight cannot exceed 10000 grams (10 kg)
+              Weight cannot exceed 10 kg
             </p>
           </div>
 
@@ -198,38 +198,33 @@ import { WasteType } from '@shared/types/enums';
   `
 })
 export class CollectionFormComponent implements OnInit {
-  collectionForm!: FormGroup;
-  selectedWasteTypes: WasteType[] = [];
+  collectionForm: FormGroup;
+  selectedWasteTypes: string[] = [];
   selectedFiles: File[] = [];
   showWasteTypeError = false;
   isSubmitting = false;
   error: string | null = null;
   successMessage: string | null = null;
 
-  wasteTypes = [
-    { value: WasteType.PLASTIC, label: 'Plastic' },
-    { value: WasteType.PAPER, label: 'Paper' },
-    { value: WasteType.GLASS, label: 'Glass' },
-    { value: WasteType.METAL, label: 'Metal' }
-  ];
+  wasteTypes = Object.values(WasteType).map(value => ({
+    value,
+    label: value.replace(/_/g, ' ')
+  }));
 
   constructor(
     private fb: FormBuilder,
     private collectionService: CollectionService,
     private router: Router
-  ) {}
-
-  ngOnInit() {
-    this.initializeForm();
-  }
-
-  private initializeForm() {
+  ) {
     this.collectionForm = this.fb.group({
-      weightInGrams: ['', [Validators.required, Validators.min(1000), Validators.max(10000)]],
+      weightInGrams: ['', [Validators.required, Validators.min(1), Validators.max(10)]],
       collectionAddress: ['', Validators.required],
       city: ['', Validators.required],
       notes: ['']
     });
+  }
+
+  ngOnInit(): void {
   }
 
   onWasteTypeChange(event: any) {
@@ -257,31 +252,23 @@ export class CollectionFormComponent implements OnInit {
   }
 
   async onSubmit() {
-    if (this.collectionForm.valid) {
-      if (this.selectedWasteTypes.length === 0) {
-        this.showWasteTypeError = true;
-        return;
-      }
+    if (this.selectedWasteTypes.length === 0) {
+      this.showWasteTypeError = true;
+      return;
+    }
 
-      this.isSubmitting = true;
-      this.error = null;
-      this.successMessage = null;
+    if (this.collectionForm.valid) {
+      const request: CollectionRequestDTO = {
+        ...this.collectionForm.value,
+        weightInGrams: this.collectionForm.value.weightInGrams * 1000, // Convert kg to grams for backend
+        wasteTypes: this.selectedWasteTypes
+      };
 
       try {
-        const formData: CollectionRequestDTO = {
-          ...this.collectionForm.value,
-          wasteTypes: this.selectedWasteTypes
-        };
-
-        await this.collectionService.createCollection(formData).toPromise();
-        this.successMessage = 'Collection request created successfully!';
-        this.collectionForm.reset();
-        this.selectedWasteTypes = [];
-        this.selectedFiles = [];
-      } catch (error: any) {
-        this.error = error.error?.message || 'Failed to create collection request. Please try again.';
-      } finally {
-        this.isSubmitting = false;
+        await this.collectionService.createRequest(request).toPromise();
+        this.router.navigate(['/household/collections']);
+      } catch (error) {
+        console.error('Error creating collection:', error);
       }
     }
   }

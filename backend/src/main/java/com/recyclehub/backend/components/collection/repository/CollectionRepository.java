@@ -4,6 +4,7 @@ import com.recyclehub.backend.entities.CollectionRequest;
 import com.recyclehub.backend.enums.RequestStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -23,7 +24,7 @@ public interface CollectionRepository extends JpaRepository<CollectionRequest, L
     
     @Query("SELECT COUNT(cr) FROM CollectionRequest cr WHERE cr.individual.id = ?1 AND cr.status IN ?2")
     long countByIndividualIdAndStatusIn(Long individualId, List<RequestStatus> statuses);
-    
-    @Query("SELECT cr FROM CollectionRequest cr WHERE cr.city = ?1 AND cr.status = 'PENDING' AND cr.collector IS NULL")
-    List<CollectionRequest> findAvailableRequestsInCity(String city);
+
+    @Query("SELECT cr FROM CollectionRequest cr WHERE cr.status = 'PENDING' AND cr.collector IS NULL")
+    List<CollectionRequest> findAllAvailableRequests();
 }

@@ -34,7 +34,7 @@ public class CollectionServiceImpl implements CollectionService {
     @Transactional
     public CollectionRequestDTO createRequest(CollectionRequestDTO requestDTO, Long householdId) {
         log.info("Creating collection request for household: {}", householdId);
-        
+
         HouseHold household = houseHoldRepository.findById(householdId)
                 .orElseThrow(() -> new ResourceNotFoundException("Household not found"));
 
@@ -78,7 +78,7 @@ public class CollectionServiceImpl implements CollectionService {
 
         CollectionRequest savedRequest = collectionRepository.save(request);
         log.info("Collection request created with ID: {}", savedRequest.getId());
-        
+
         return collectionMapper.toDTO(savedRequest);
     }
 
@@ -86,7 +86,7 @@ public class CollectionServiceImpl implements CollectionService {
     @Transactional
     public CollectionRequestDTO updateRequest(Long requestId, CollectionRequestDTO requestDTO, Long householdId) {
         log.info("Updating collection request: {} for household: {}", requestId, householdId);
-        
+
         CollectionRequest request = collectionRepository.findByIdAndIndividualId(requestId, householdId)
                 .orElseThrow(() -> new ResourceNotFoundException("Collection request not found"));
 
@@ -102,7 +102,7 @@ public class CollectionServiceImpl implements CollectionService {
         // Clear and update waste items
         List<WasteItem> existingItems = request.getWasteItems();
         existingItems.clear();
-        
+
         List<WasteItem> newWasteItems = requestDTO.getWasteTypes().stream()
                 .map(type -> WasteItem.builder()
                         .request(request)
@@ -117,7 +117,7 @@ public class CollectionServiceImpl implements CollectionService {
         if (requestDTO.getPhotos() != null) {
             List<RequestPhoto> existingPhotos = request.getPhotos();
             existingPhotos.removeIf(photo -> !photo.getIsCollectorPhoto());
-            
+
             List<RequestPhoto> newPhotos = requestDTO.getPhotos().stream()
                     .map(url -> RequestPhoto.builder()
                             .request(request)
@@ -132,7 +132,7 @@ public class CollectionServiceImpl implements CollectionService {
         request.setUpdatedAt(LocalDateTime.now());
         CollectionRequest updatedRequest = collectionRepository.save(request);
         log.info("Collection request updated: {}", updatedRequest.getId());
-        
+
         return collectionMapper.toDTO(updatedRequest);
     }
 
@@ -140,7 +140,7 @@ public class CollectionServiceImpl implements CollectionService {
     @Transactional
     public void deleteRequest(Long requestId, Long householdId) {
         log.info("Deleting collection request: {} for household: {}", requestId, householdId);
-        
+
         CollectionRequest request = collectionRepository.findByIdAndIndividualId(requestId, householdId)
                 .orElseThrow(() -> new ResourceNotFoundException("Collection request not found"));
 
@@ -156,7 +156,7 @@ public class CollectionServiceImpl implements CollectionService {
     @Transactional
     public CollectionRequestDTO updateRequestStatus(Long requestId, RequestStatus status, Long collectorId) {
         log.info("Updating request: {} status to: {} by collector: {}", requestId, status, collectorId);
-        
+
         CollectionRequest request = collectionRepository.findById(requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Collection request not found"));
 
@@ -173,7 +173,7 @@ public class CollectionServiceImpl implements CollectionService {
 
         CollectionRequest updatedRequest = collectionRepository.save(request);
         log.info("Request status updated successfully: {}", requestId);
-        
+
         return collectionMapper.toDTO(updatedRequest);
     }
 
@@ -181,7 +181,7 @@ public class CollectionServiceImpl implements CollectionService {
     @Transactional
     public CollectionRequestDTO completeCollection(Long requestId, Integer actualWeight, List<String> photos, Long collectorId) {
         log.info("Completing collection for request: {} by collector: {}", requestId, collectorId);
-        
+
         CollectionRequest request = collectionRepository.findByIdAndCollectorId(requestId, collectorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Collection request not found"));
 
@@ -190,7 +190,7 @@ public class CollectionServiceImpl implements CollectionService {
         }
 
         request.setActualWeight(actualWeight / 1000.0); // Convert to kg
-        
+
         // Add collector photos
         if (photos != null && !photos.isEmpty()) {
             List<RequestPhoto> collectorPhotos = photos.stream()
@@ -211,7 +211,7 @@ public class CollectionServiceImpl implements CollectionService {
         double totalEstimatedWeight = request.getWasteItems().stream()
                 .mapToDouble(WasteItem::getWeight)
                 .sum();
-        
+
         for (WasteItem item : request.getWasteItems()) {
             double proportion = item.getWeight() / totalEstimatedWeight;
             item.setWeight(request.getActualWeight() * proportion);
@@ -222,7 +222,7 @@ public class CollectionServiceImpl implements CollectionService {
 
         CollectionRequest completedRequest = collectionRepository.save(request);
         log.info("Collection completed successfully: {}", requestId);
-        
+
         return collectionMapper.toDTO(completedRequest);
     }
 
@@ -236,9 +236,8 @@ public class CollectionServiceImpl implements CollectionService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<CollectionRequestDTO> getAvailableRequestsInCity(String city) {
-        return collectionRepository.findAvailableRequestsInCity(city)
+    public List<CollectionRequestDTO> getAllAvailableRequests() {
+        return collectionRepository.findAllAvailableRequests()
                 .stream()
                 .map(collectionMapper::toDTO)
                 .toList();
@@ -293,8 +292,8 @@ public class CollectionServiceImpl implements CollectionService {
 
         household.setPoints(household.getPoints() + totalPoints);
         houseHoldRepository.save(household);
-        
-        log.info("Awarded {} points to household {} for collection {}", 
+
+        log.info("Awarded {} points to household {} for collection {}",
                 totalPoints, household.getId(), request.getId());
     }
 }

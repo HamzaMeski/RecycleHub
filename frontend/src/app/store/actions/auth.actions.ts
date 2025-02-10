@@ -19,16 +19,16 @@ export const loginFailure = createAction(
 
 // Register Actions
 export const registerHouseHold = createAction(
-  '[Auth] Register HouseHold',
+  '[Auth] Register Household',
   props<{ request: HouseHoldRegisterRequest }>()
 );
 
 export const registerHouseHoldSuccess = createAction(
-  '[Auth] Register HouseHold Success'
+  '[Auth] Register Household Success'
 );
 
 export const registerHouseHoldFailure = createAction(
-  '[Auth] Register HouseHold Failure',
+  '[Auth] Register Household Failure',
   props<{ error: string }>()
 );
 

@@ -8,7 +8,7 @@ import { Store } from '@ngrx/store';
 import { logout } from '@store/actions/auth.actions';
 
 @Component({
-  selector: 'app-household-dashboard',
+  selector: 'app-collector-dashboard',
   standalone: true,
   imports: [CommonModule, RouterModule, MatButtonModule, MatIconModule],
   template: `
@@ -23,7 +23,7 @@ import { logout } from '@store/actions/auth.actions';
         <!-- Navigation Links -->
         <nav class="flex flex-col h-[calc(100%-4rem)] justify-between">
           <div class="px-4 space-y-2 mt-6">
-            <a routerLink="/household/dashboard" 
+            <a routerLink="/collector/dashboard"
                routerLinkActive="bg-green-500 text-white"
                [routerLinkActiveOptions]="{exact: true}"
                class="flex items-center px-4 py-2.5 text-gray-700 rounded-lg hover:bg-green-500 hover:text-white transition-all duration-200">
@@ -33,47 +33,20 @@ import { logout } from '@store/actions/auth.actions';
               Dashboard
             </a>
 
-            <a routerLink="/household/collections/new"
+            <a routerLink="/collector/collections"
                routerLinkActive="bg-green-500 text-white"
                class="flex items-center px-4 py-2.5 text-gray-700 rounded-lg hover:bg-green-500 hover:text-white transition-all duration-200">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
-              New Collection
+              Collections
             </a>
 
-            <a routerLink="/household/collections"
-               routerLinkActive="bg-green-500 text-white"
-               [routerLinkActiveOptions]="{exact: true}"
-               class="flex items-center px-4 py-2.5 text-gray-700 rounded-lg hover:bg-green-500 hover:text-white transition-all duration-200">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              My Collections
-            </a>
-
-            <a routerLink="/household/rewards"
-               routerLinkActive="bg-green-500 text-white"
-               class="flex items-center px-4 py-2.5 text-gray-700 rounded-lg hover:bg-green-500 hover:text-white transition-all duration-200">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Points & Rewards
-            </a>
-
-            <a routerLink="/household/profile"
-               routerLinkActive="bg-green-500 text-white"
-               class="flex items-center px-4 py-2.5 text-gray-700 rounded-lg hover:bg-green-500 hover:text-white transition-all duration-200">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              Profile
-            </a>
           </div>
 
           <!-- Logout Button at Bottom -->
           <div class="px-4 mb-6">
-            <button (click)="logout()" 
+            <button (click)="logout()"
                     class="flex items-center w-full px-4 py-2.5 text-gray-700 rounded-lg hover:bg-red-500 hover:text-white transition-all duration-200">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -94,7 +67,7 @@ import { logout } from '@store/actions/auth.actions';
     </div>
   `
 })
-export class HouseholdDashboardComponent {
+export class CollectorDashboardComponent {
   constructor(
     private authService: AuthService,
     private store: Store

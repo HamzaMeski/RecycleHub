@@ -13,7 +13,7 @@ public interface CollectionService {
     List<CollectionRequestDTO> getHouseholdRequests(Long householdId);
     
     // Collector methods
-    List<CollectionRequestDTO> getAvailableRequestsInCity(String city);
+    List<CollectionRequestDTO> getAllAvailableRequests();
     CollectionRequestDTO updateRequestStatus(Long requestId, RequestStatus status, Long collectorId);
     CollectionRequestDTO completeCollection(Long requestId, Integer actualWeight, List<String> photos, Long collectorId);
     List<CollectionRequestDTO> getCollectorRequests(Long collectorId);
