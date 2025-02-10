@@ -41,7 +41,7 @@ import { logout } from '@store/actions/auth.actions';
               </svg>
               Collections
             </a>
-            
+
           </div>
 
           <!-- Logout Button at Bottom -->
