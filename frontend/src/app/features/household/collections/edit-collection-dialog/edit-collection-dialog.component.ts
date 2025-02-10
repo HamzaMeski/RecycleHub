@@ -11,7 +11,7 @@ import { Collection } from '@shared/types/models';
 import { CollectionService } from '@core/services/collection.service';
 
 @Component({
-  selector: 'app-new-collection-dialog',
+  selector: 'app-edit-collection-dialog',
   standalone: true,
   imports: [
     CommonModule,
@@ -89,13 +89,13 @@ import { CollectionService } from '@core/services/collection.service';
     </div>
   `
 })
-export class NewCollectionDialogComponent implements OnInit {
+export class EditCollectionDialogComponent implements OnInit {
   collectionForm: FormGroup;
   isEdit = false;
 
   constructor(
     private fb: FormBuilder,
-    private dialogRef: MatDialogRef<NewCollectionDialogComponent>,
+    private dialogRef: MatDialogRef<EditCollectionDialogComponent>,
     @Inject(MAT_DIALOG_DATA) private data: Collection | null,
     private collectionService: CollectionService
   ) {

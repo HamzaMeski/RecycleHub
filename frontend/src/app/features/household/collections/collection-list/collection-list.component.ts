@@ -10,9 +10,9 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CollectionService } from '@core/services/collection.service';
 import { Collection } from '@shared/types/models';
-import { NewCollectionDialogComponent } from '../new-collection-dialog/new-collection-dialog.component';
+import { EditCollectionDialogComponent } from '../edit-collection-dialog/edit-collection-dialog.component';
 import { ViewCollectionDialogComponent } from '../view-collection-dialog/view-collection-dialog.component';
-import { DeleteCollectionDialogComponent } from '../delete-collection-dialog/delete-collection-dialog.component';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { Router } from '@angular/router';
@@ -178,7 +178,7 @@ export class CollectionListComponent implements OnInit {
   }
 
   openNewCollectionDialog(): void {
-    const dialogRef = this.dialog.open(NewCollectionDialogComponent, {
+    const dialogRef = this.dialog.open(EditCollectionDialogComponent, {
       width: '500px'
     });
 
@@ -190,7 +190,7 @@ export class CollectionListComponent implements OnInit {
   }
 
   editCollection(collection: Collection): void {
-    const dialogRef = this.dialog.open(NewCollectionDialogComponent, {
+    const dialogRef = this.dialog.open(EditCollectionDialogComponent, {
       width: '500px',
       data: collection
     });
@@ -213,9 +213,15 @@ export class CollectionListComponent implements OnInit {
     const collection = this.collections.find(c => c.id === id);
     if (!collection) return;
 
-    const dialogRef = this.dialog.open(DeleteCollectionDialogComponent, {
-      width: '500px',
-      data: collection
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Collection',
+        message: `Are you sure you want to delete collection #${collection.id}? This action cannot be undone.`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        isDestructive: true
+      }
     });
 
     dialogRef.afterClosed().subscribe(confirmed => {
