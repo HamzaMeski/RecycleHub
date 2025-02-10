@@ -11,6 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { CollectionService } from '@core/services/collection.service';
 import { Collection } from '@shared/types/models';
 import { NewCollectionDialogComponent } from '../new-collection-dialog/new-collection-dialog.component';
+import { ViewCollectionDialogComponent } from '../view-collection-dialog/view-collection-dialog.component';
 import { catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { Router } from '@angular/router';
@@ -201,7 +202,10 @@ export class CollectionListComponent implements OnInit {
   }
 
   viewCollection(collection: Collection): void {
-    // TO DO: implement view collection functionality
+    this.dialog.open(ViewCollectionDialogComponent, {
+      width: '500px',
+      data: collection
+    });
   }
 
   deleteCollection(id: number): void {
