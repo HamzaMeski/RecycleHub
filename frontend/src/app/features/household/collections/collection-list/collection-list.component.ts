@@ -12,6 +12,7 @@ import { CollectionService } from '@core/services/collection.service';
 import { Collection } from '@shared/types/models';
 import { NewCollectionDialogComponent } from '../new-collection-dialog/new-collection-dialog.component';
 import { ViewCollectionDialogComponent } from '../view-collection-dialog/view-collection-dialog.component';
+import { DeleteCollectionDialogComponent } from '../delete-collection-dialog/delete-collection-dialog.component';
 import { catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { Router } from '@angular/router';
@@ -209,17 +210,27 @@ export class CollectionListComponent implements OnInit {
   }
 
   deleteCollection(id: number): void {
-    if (confirm('Are you sure you want to delete this collection?')) {
-      this.collectionService.deleteRequest(id).pipe(
-        catchError(error => {
-          this.error = 'Failed to delete collection';
-          console.error('Error deleting collection:', error);
-          return of(null);
-        })
-      ).subscribe(() => {
-        this.loadCollections();
-      });
-    }
+    const collection = this.collections.find(c => c.id === id);
+    if (!collection) return;
+
+    const dialogRef = this.dialog.open(DeleteCollectionDialogComponent, {
+      width: '500px',
+      data: collection
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.collectionService.deleteRequest(id).pipe(
+          catchError(error => {
+            this.error = 'Failed to delete collection';
+            console.error('Error deleting collection:', error);
+            return of(null);
+          })
+        ).subscribe(() => {
+          this.loadCollections();
+        });
+      }
+    });
   }
 
   logout(): void {
